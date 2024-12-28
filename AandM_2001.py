@@ -44,7 +44,7 @@ def AandM_2001(nlay, qv0, cld_sp, fsed, al, sigma, alpha, rho_d, mw_cld, grav, a
       L = al * (Hp[k] + Hp[k+1])/2.0
       qt[k] = qt[k+1] * np.exp(-fsed * dz / L)
 
-      # Use A&M Eq. (8) to get condensate
+      # Use A&M Eq. (8) to get condensate fraction
       qc[k] = np.maximum(0.0,qt[k] - (Scloud + 1.0)*qs[k])
 
       qv[k] = qt[k] - qc[k] # (should be = qs[k] by definition)
@@ -55,10 +55,11 @@ def AandM_2001(nlay, qv0, cld_sp, fsed, al, sigma, alpha, rho_d, mw_cld, grav, a
   # velocity of the condensate
  
   # Here we do a `cheat method' to quickly get a solution - proper calculations use a minimisation scheme
+  # as the settling velocity depends on the radius non-trivially. Here we do a simple inversion.
   # Find the vertical convective velocity using Kzz = w * Hp (Marley & Robinson 2015)
-  # Scale with assumed mixing length factor
+  # Scale with assumed mixing length factor and fsed
   w = np.zeros(nlay)
-  w[:] = Kzz[:]/(al*Hp[:])/fsed
+  w[:] = Kzz[:]/(al*Hp[:])*fsed
 
   # Target settling velocity of particles must = w at each layer
   rw = np.zeros(nlay)

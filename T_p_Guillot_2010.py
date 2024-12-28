@@ -32,6 +32,7 @@ def Guillot_T_p(nlay, p0, pl, k_v, k_ir, Tint, mu_z, Tirr, grav):
     Tl[:] = ((3.0/4.0) * Tint**4 * (tau_irl[:] + 2.0/3.0))
     Tl[:] = Tl[:] + (mu_z * 3.0 * Tirr**4)/4.0 *  \
       (2.0/3.0 + mu_z/gam + ((gam/(3.0*mu_z)) - mu_z/gam) * np.exp(-gam*tau_irl[:]/mu_z))
-    Tl[:] = Tl[:]**(1.0/4.0)
+      
+  Tl[:] = Tl[:]**(1.0/4.0)
 
   return Tl

@@ -3,7 +3,7 @@ A&M:
   ptop: 1.0e-6
   pbot: 1000.0
 
-  mu_z: 0.577
+  mu_z: 0.00
   Tirr: 1000.0
   Tint: 500.0
   k_v: 4.0e-3
