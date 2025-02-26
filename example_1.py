@@ -12,13 +12,15 @@ import matplotlib.pylab as plt # for plotting
 import seaborn as sns # for good colourblind colour scheme
 import yaml # for reading in the input parameter YAML file
 
-from atm_module import hypsometric
+from atm_module import hypsometric, visc_mixture
 
 from T_p_Guillot_2010 import Guillot_T_p # Import function for Guillot 2010 semi-grey profile
 from T_p_Parmentier_2015 import Parmentier_T_p # Import function for Parmentier & Guillot 2015 picket-fence profile
 
 from AandM_2001 import AandM_2001
 
+kb = 1.380649e-16
+amu = 1.66053906892e-24
 
 # Open parameter YAML file and read parameters for A&M profile
 with open('parameters.yaml', 'r') as file:
@@ -74,6 +76,14 @@ else:
   print('Invalid T structure selection')
   quit()
 
+# Atmosphere mass density
+rho = np.zeros(nlay)
+rho[:] = (pl[:]*mu[:]*amu)/(kb * Tl[:])
+
+# Atmosphere thermal velocity
+cT = np.zeros(nlay)
+cT[:] = np.sqrt((2.0 * kb * Tl[:]) / (mu[:] * amu))
+
 # Find the altitude grid and scale heights at levels and layers using the hypsometric equation
 alte = np.zeros(nlev)
 alte, Hp = hypsometric(nlev, Tl, pe, mu, grav)
@@ -84,17 +94,14 @@ altl = (alte[0:-1] + alte[1:])/2.0
 bg_sp = param['bg_sp']
 bg_VMR = param['bg_VMR']
 bg_mw = param['bg_mw']
+bg_d = param['bg_d']
+bg_LJ = param['bg_LJ']
 nbg = len(bg_sp)
 
-# Find dynamical viscosity of layer
-kb = 1.380649e-16
-amu = 1.66053906892e-24
-d_g = [2.827e-8]
-LJ_g = [59.7 * kb]
-
+# Find dynamical viscosity of each layer given a background gas mixture
 eta = np.zeros(nlay)
-eta[:] = (5.0/16.0) * (np.sqrt(np.pi*(bg_mw[0]*amu)*kb*Tl[:])/(np.pi*d_g[0]**2)) \
-  * ((((kb*Tl[:])/LJ_g[0])**(0.16))/1.22)
+for k in range(nlay):
+  eta[k] = visc_mixture(Tl[k], nbg, bg_VMR, bg_mw, bg_d, bg_LJ)
 
 cld_sp = param['cld_sp']
 cld_mw = param['cld_mw']
@@ -114,12 +121,11 @@ qc = np.zeros((nlay,ncld))
 qt = np.zeros((nlay,ncld))
 qs = np.zeros((nlay,ncld))
 rw = np.zeros((nlay,ncld))
-rm = np.zeros((nlay,ncld)) 
+rm = np.zeros((nlay,ncld))
 nc = np.zeros((nlay,ncld))
 for n in range(ncld):
   qv[:,n], qc[:,n], qt[:,n], qs[:,n], rw[:,n], rm[:,n], nc[:,n]  = \
-    AandM_2001(nlay, qv0[n], cld_sp[n], fsed, al, sigma, alpha, rho_d[0], cld_mw[n], grav, altl, Tl, pl, Hp, Kzz, mu, eta)
-
+    AandM_2001(nlay, qv0[n], cld_sp[n], fsed, al, sigma, alpha, rho_d[0], cld_mw[n], grav, altl, Tl, pl, Hp, Kzz, mu, eta, rho, cT)
 
 
 fig = plt.figure() # Start figure 

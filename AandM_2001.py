@@ -8,7 +8,7 @@ from atm_module import sat_vmr
 Scloud = 0.0
 R = 8.31446261815324e7
 
-def AandM_2001(nlay, qv0, cld_sp, fsed, al, sigma, alpha, rho_d, mw_cld, grav, altl, Tl, pl, Hp, Kzz, mu, eta):
+def AandM_2001(nlay, qv0, cld_sp, fsed, al, sigma, alpha, rho_d, mw_cld, grav, altl, Tl, pl, Hp, Kzz, mu, eta, rho, cT):
 
 
   # Step through atmosphere to calculate condensate fraction at each layer
@@ -54,8 +54,8 @@ def AandM_2001(nlay, qv0, cld_sp, fsed, al, sigma, alpha, rho_d, mw_cld, grav, a
   # The upward diffusion of total condensate must equal the downward
   # velocity of the condensate
  
-  # Here we do a `cheat method' to quickly get a solution - proper calculations use a minimisation scheme
-  # as the settling velocity depends on the radius non-trivially. Here we do a simple inversion.
+  # Here we do a `cheat method' to quickly get a solution through assuming the particles are
+  # in the Epstein drag regime.
   # Find the vertical convective velocity using Kzz = w * Hp (Marley & Robinson 2015)
   # Scale with assumed mixing length factor and fsed
   w = np.zeros(nlay)
@@ -72,15 +72,13 @@ def AandM_2001(nlay, qv0, cld_sp, fsed, al, sigma, alpha, rho_d, mw_cld, grav, a
       rm[k] = 0.0
       nc[k] = 0.0
     else:
-      beta = 1.0 
-      rw2 = (2.0/9.0) * (beta*grav*rho_d)/(eta[k]*w[k])
-      rw[k] = np.sqrt(1.0/rw2)
 
-      rm[k] = rw[k] * fsed**(1.0/alpha) * np.exp(-(alpha+6)/2.0 * np.log(sigma)**2)
+      rw[k] = (w[k]*2.0*cT[k]*rho[k])/(np.sqrt(np.pi)*grav*rho_d)
 
-      rho = (pl[k]*mu[k])/(R*Tl[k])
+      rm[k] = rw[k] * fsed**(1.0/alpha) * np.exp(-(alpha+6.0)/2.0 * np.log(sigma)**2)
+
       eps = mw_cld/mu[k]
-      nc[k] = (3.0 * qc[k] * eps * rho)/(4.0*np.pi*rho_d*rm[k]**3) \
+      nc[k] = (3.0 * qc[k] * eps * rho[k])/(4.0*np.pi*rho_d*rm[k]**3) \
         * np.exp(-9.0/2.0 * np.log(sigma)**2)
  
   return qv, qc, qt, qs, rw, rm, nc
