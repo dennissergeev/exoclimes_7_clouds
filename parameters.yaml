@@ -1,5 +1,5 @@
 A&M:
-  nlay: 100
+  nlay: 200
   ptop: 1.0e-6
   pbot: 1000.0
 
@@ -29,9 +29,10 @@ A&M:
   bg_LJ: [59.7,10.22]
 
   cld_sp: ['MgSiO3']
-  cld_mw: [100.39]
-  qv0: [3.548e-5]
   rho_d: [3.2]
+  cld_mw: [100.39]
+  vap_mw: [100.39]
+  vap_VMR: [3.548e-5]
 
 sat_adjust:
 

@@ -1,39 +1,43 @@
 '''
 
+In this scheme we use q in mass ratio units [g g^-1], this makes it easier to compare to other schemes.
 '''
 
 import numpy as np
-from atm_module import sat_vmr
+from atm_module import q_s_sat
 
 Scloud = 0.0
 R = 8.31446261815324e7
 
-def AandM_2001(nlay, qv0, cld_sp, fsed, al, sigma, alpha, rho_d, mw_cld, grav, altl, Tl, pl, Hp, Kzz, mu, eta, rho, cT):
+def AandM_2001(nlay, vap_VMR, vap_mw, cld_sp, fsed, al, sigma, alpha, rho_d, cld_mw, grav, altl, Tl, pl, met, Hp, Kzz, mu, eta, rho, cT):
 
 
   # Step through atmosphere to calculate condensate fraction at each layer
   # using A&M 2001 Eq. (8)
 
-  qv = np.zeros(nlay)
-  qc = np.zeros(nlay)
-  qt = np.zeros(nlay)
-  qs = np.zeros(nlay)
+  q_v = np.zeros(nlay)
+  q_c = np.zeros(nlay)
+  q_t = np.zeros(nlay)
+  q_s = np.zeros(nlay)
 
-  qc[-1] = 0.0
-  qv[-1] = qv0
-  qt[-1] = qv0
-  qs[-1] = sat_vmr(cld_sp, Tl[-1], pl[-1])
+  # Set lowest boundary values - convert vapour VMR to MMR
+  q_c[-1] = 0.0
+  q_v[-1] = vap_VMR * vap_mw/mu[-1]
+  q_t[-1] = q_v[-1]
+  q_s[-1] = q_s_sat(vap_mw, cld_sp, Tl[-1], pl[-1], rho[-1], met)
 
+  # Set through atmosphere from lower to upper boundary and perform calculation
   for k in range(nlay-2,-1,-1):
-    # First calculate saturation vmr of species (qs) at layer
-    qs[k] = sat_vmr(cld_sp, Tl[k], pl[k])
-    # If the condensate vapour is > than saturation vmr then it 
+    # First calculate saturation mmr of species (qs) at layer
+    q_s[k] = q_s_sat(vap_mw, cld_sp, Tl[k], pl[k], rho[k], met)
+    # If the condensate mmr vapour is > than saturation mmr then it 
     # condenses in this layer, else it does not
-    if (qv[k+1] <= qs[k]):
+    if (q_v[k+1] <= q_s[k]):
       # No condensation - solution is not changed from layer below
-      qv[k] = qv[k+1]
-      qc[k] = 0.0
-      qt[k] = qv[k] + qc[k]
+      q_v[k] = q_v[k+1]
+      q_c[k] = 0.0
+      q_t[k] = q_v[k] + q_c[k]
+      # Go to next layer above
       continue
     else:
       # Condensation is triggered - adjust the condensate mixing ratio
@@ -42,12 +46,15 @@ def AandM_2001(nlay, qv0, cld_sp, fsed, al, sigma, alpha, rho_d, mw_cld, grav, a
       # Use A&M Eq. (7) to get total mixing ratio in layer
       dz = altl[k] - altl[k+1]
       L = al * (Hp[k] + Hp[k+1])/2.0
-      qt[k] = qt[k+1] * np.exp(-fsed * dz / L)
+      q_t[k] = q_t[k+1] * np.exp(-fsed * dz / L)
 
       # Use A&M Eq. (8) to get condensate fraction
-      qc[k] = np.maximum(0.0,qt[k] - (Scloud + 1.0)*qs[k])
+      q_c[k] = np.maximum(0.0,q_t[k] - (Scloud + 1.0)*q_s[k])
 
-      qv[k] = qt[k] - qc[k] # (should be = qs[k] by definition)
+      # Account for any differences between vapour and condensate molecular weight
+      q_c[k] = q_c[k]
+
+      q_v[k] = q_t[k] - q_c[k] # (should be = qs[k] by definition)
 
   # We now have the condensation profile, next we use
   # the balance equation to estimate the cloud properties
@@ -62,23 +69,22 @@ def AandM_2001(nlay, qv0, cld_sp, fsed, al, sigma, alpha, rho_d, mw_cld, grav, a
   w[:] = Kzz[:]/(al*Hp[:])*fsed
 
   # Target settling velocity of particles must = w at each layer
-  rw = np.zeros(nlay)
-  rm = np.zeros(nlay)
-  nc = np.zeros(nlay)
+  r_w = np.zeros(nlay)
+  r_m = np.zeros(nlay)
+  N_c = np.zeros(nlay)
   for k in range(nlay):
-    if (qc[k] < 1e-10):
+    if (q_c[k] < 1e-10):
       # If low condensate fraction, assume zero
-      rw[k] = 0.0
-      rm[k] = 0.0
-      nc[k] = 0.0
+      r_w[k] = 0.0
+      r_m[k] = 0.0
+      N_c[k] = 0.0
     else:
 
-      rw[k] = (w[k]*2.0*cT[k]*rho[k])/(np.sqrt(np.pi)*grav*rho_d)
+      r_w[k] = (w[k]*2.0*cT[k]*rho[k])/(np.sqrt(np.pi)*grav*rho_d)
 
-      rm[k] = rw[k] * fsed**(1.0/alpha) * np.exp(-(alpha+6.0)/2.0 * np.log(sigma)**2)
+      r_m[k] = r_w[k] * fsed**(1.0/alpha) * np.exp(-(alpha+6.0)/2.0 * np.log(sigma)**2)
 
-      eps = mw_cld/mu[k]
-      nc[k] = (3.0 * qc[k] * eps * rho[k])/(4.0*np.pi*rho_d*rm[k]**3) \
+      N_c[k] = (3.0 * q_c[k]* rho[k])/(4.0*np.pi*rho_d*r_m[k]**3) \
         * np.exp(-9.0/2.0 * np.log(sigma)**2)
  
-  return qv, qc, qt, qs, rw, rm, nc
+  return q_v, q_c, q_t, q_s, r_w, r_m, N_c

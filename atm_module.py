@@ -24,15 +24,21 @@ def hypsometric(nlev, Tl, pe, mu, grav):
 
   return alte, Hp
 
-def sat_vmr(cld_sp, T, p):
+def q_s_sat(vap_mw, cld_sp, T, p, rho, met):
 
+  # Calculate vapour pressure of species
   if (cld_sp == 'MgSiO3'):
-    # Ackerman & Marley (2001)
-    p_vap = np.exp(-58663.0/T + 25.37) * bar
+    # Visscher - taken from VIRGA
+    p_vap = 10.0**(13.43 - 28665.0/T - met) * bar
 
-  qs = np.minimum(1.0, p_vap/p)
 
-  return qs
+  # Specific gas constant of condensable vapour 
+  Rd_v = R/vap_mw
+
+  # Saturation mass mixing ratio
+  q_s = (p_vap/(Rd_v * T))/rho
+
+  return q_s
 
 def visc_mixture(T, nbg, bg_VMR, bg_mw, bg_d, bg_LJ):
 

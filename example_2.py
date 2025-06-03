@@ -17,12 +17,14 @@ from atm_module import hypsometric, visc_mixture
 from T_p_Guillot_2010 import Guillot_T_p # Import function for Guillot 2010 semi-grey profile
 from T_p_Parmentier_2015 import Parmentier_T_p # Import function for Parmentier & Guillot 2015 picket-fence profile
 
-from AandM_2001 import AandM_2001
+from saturation_adjust import sat_adj, v_f
 
+kb = 1.380649e-16
+amu = 1.66053906892e-24
 
 # Open parameter YAML file and read parameters for A&M profile
 with open('parameters.yaml', 'r') as file:
-  param = yaml.safe_load(file)['A&M']
+  param = yaml.safe_load(file)['sat_adjust']
 
 # Now extract the parameters from the YAML file into local variables
 
@@ -74,6 +76,14 @@ else:
   print('Invalid T structure selection')
   quit()
 
+# Atmosphere mass density
+rho = np.zeros(nlay)
+rho[:] = (pl[:]*mu[:]*amu)/(kb * Tl[:])
+
+# Atmosphere thermal velocity
+cT = np.zeros(nlay)
+cT[:] = np.sqrt((2.0 * kb * Tl[:]) / (mu[:] * amu))
+
 # Find the altitude grid and scale heights at levels and layers using the hypsometric equation
 alte = np.zeros(nlev)
 alte, Hp = hypsometric(nlev, Tl, pe, mu, grav)
@@ -99,34 +109,42 @@ qv0 = param['qv0']
 rho_d = param['rho_d']
 ncld = len(cld_sp)
 
-tau_cond= param['tau_cond']
-rm = param['rm']
-sigma = param['sigma']
-al= param['al']
 
-# We now have everything to perform the A&M (2001) calculation
+# We now have everything to perform the time dependent saturation adjustment calculation
 # Loop over for each condensate calculation
 qv = np.zeros((nlay,ncld))
 qc = np.zeros((nlay,ncld))
-qt = np.zeros((nlay,ncld))
 qs = np.zeros((nlay,ncld))
-rw = np.zeros((nlay,ncld))
-rm = np.zeros((nlay,ncld)) 
 nc = np.zeros((nlay,ncld))
-for n in range(ncld):
-  qv[:,n], qc[:,n], qt[:,n], qs[:,n], rw[:,n], rm[:,n], nc[:,n]  = \
-    AandM_2001(nlay, qv0[n], cld_sp[n], fsed, al, sigma, alpha, rho_d[0], cld_mw[n], grav, altl, Tl, pl, Hp, Kzz, mu, eta)
 
+for n in range(nt):
+
+  for i in range(nlay):
+
+    for k in range(ncld):
+      qv[i,k], qc[i,k], qt[i,k], qs[i,k], nc[i,k]  = \
+      sat_adj(nlay, qv0[k], cld_sp[k], sigma, alpha, rho_d[k], cld_mw[k], grav, altl, Tl, pl, Hp, Kzz, mu, eta, rho, cT)
+
+      vf
+
+  # Vertically settle the cloud condensate tracer using a McCormack scheme
+  vert_adv_exp_McCormack()
+  # Vertically diffuse the cloud vapour and condensate using an explicit 2nd order scheme
+  vert_diff_exp(nlay)
 
 
 fig = plt.figure() # Start figure 
 
 colour = sns.color_palette('colorblind') # Decent colourblind wheel (10 colours)
 
-plt.plot(Tl,pl/1e6,c=colour[0],ls='solid',lw=2)
+plt.plot(Tl,pl/1e6,c=colour[0],ls='solid',lw=2,label=r'T-p')
 plt.yscale('log')
 plt.gca().invert_yaxis()
-
+plt.xlabel(r'$T$ [K]',fontsize=16)
+plt.ylabel(r'$p$ [bar]',fontsize=16)
+plt.tick_params(axis='both',which='major',labelsize=14)
+plt.legend()
+plt.tight_layout(pad=1.05, h_pad=None, w_pad=None, rect=None)
 
 fig = plt.figure() # Start figure 
 
@@ -136,37 +154,46 @@ plt.plot(qv,pl/1e6,c=colour[0],ls='solid',lw=2,label='qv')
 plt.plot(qc,pl/1e6,c=colour[1],ls='solid',lw=2,label='qc')
 plt.plot(qt,pl/1e6,c=colour[2],ls='dotted',lw=2,label='qt')
 plt.plot(qs,pl/1e6,c=colour[3],ls='dashed',lw=2,label='qs')
-
 plt.legend()
-
 plt.xscale('log')
 plt.yscale('log')
 plt.gca().invert_yaxis()
-
-fig = plt.figure() # Start figure 
-
-colour = sns.color_palette('colorblind') # Decent colourblind wheel (10 colours)
-
-plt.plot(nc,pl/1e6,c=colour[0],ls='solid',lw=2,label='nc')
-
+plt.xlabel(r'$q$ [-]',fontsize=16)
+plt.ylabel(r'$p$ [bar]',fontsize=16)
+plt.tick_params(axis='both',which='major',labelsize=14)
 plt.legend()
-
-plt.xscale('log')
-plt.yscale('log')
-plt.gca().invert_yaxis()
+plt.tight_layout(pad=1.05, h_pad=None, w_pad=None, rect=None)
 
 
 fig = plt.figure() # Start figure 
 
 colour = sns.color_palette('colorblind') # Decent colourblind wheel (10 colours)
 
-plt.plot(rw*1e4,pl/1e6,c=colour[0],ls='solid',lw=2,label='rw')
-plt.plot(rm*1e4,pl/1e6,c=colour[1],ls='solid',lw=2,label='rm')
-
+plt.plot(nc,pl/1e6,c=colour[0],ls='solid',lw=2,label=r'$N_{\rm c}$')
 plt.legend()
-
 plt.xscale('log')
 plt.yscale('log')
 plt.gca().invert_yaxis()
+plt.xlabel(r'$N_{\rm c}$ [cm$^{-3}$]',fontsize=16)
+plt.ylabel(r'$p$ [bar]',fontsize=16)
+plt.tick_params(axis='both',which='major',labelsize=14)
+plt.legend()
+plt.tight_layout(pad=1.05, h_pad=None, w_pad=None, rect=None)
+
+fig = plt.figure() # Start figure 
+
+colour = sns.color_palette('colorblind') # Decent colourblind wheel (10 colours)
+
+plt.plot(rw*1e4,pl/1e6,c=colour[0],ls='solid',lw=2,label=r'$r_{\rm w}$')
+plt.plot(rm*1e4,pl/1e6,c=colour[1],ls='solid',lw=2,label=r'$r_{\rm m}$')
+plt.legend()
+plt.xscale('log')
+plt.yscale('log')
+plt.gca().invert_yaxis()
+plt.xlabel(r'$r$ [$\mu$m]',fontsize=16)
+plt.ylabel(r'$p$ [bar]',fontsize=16)
+plt.tick_params(axis='both',which='major',labelsize=14)
+plt.legend()
+plt.tight_layout(pad=1.05, h_pad=None, w_pad=None, rect=None)
 
 plt.show()

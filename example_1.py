@@ -105,8 +105,10 @@ for k in range(nlay):
 
 cld_sp = param['cld_sp']
 cld_mw = param['cld_mw']
-qv0 = param['qv0']
 rho_d = param['rho_d']
+vap_mw =  param['vap_mw']
+vap_VMR = param['vap_VMR']
+
 ncld = len(cld_sp)
 
 al = param['al']
@@ -116,66 +118,76 @@ alpha = param['alpha']
 
 # We now have everything to perform the A&M (2001) calculation
 # Loop over for each condensate calculation
-qv = np.zeros((nlay,ncld))
-qc = np.zeros((nlay,ncld))
-qt = np.zeros((nlay,ncld))
-qs = np.zeros((nlay,ncld))
-rw = np.zeros((nlay,ncld))
-rm = np.zeros((nlay,ncld))
-nc = np.zeros((nlay,ncld))
+q_v = np.zeros((nlay,ncld))
+q_c = np.zeros((nlay,ncld))
+q_t = np.zeros((nlay,ncld))
+q_s = np.zeros((nlay,ncld))
+r_w = np.zeros((nlay,ncld))
+r_m = np.zeros((nlay,ncld))
+N_c = np.zeros((nlay,ncld))
 for n in range(ncld):
-  qv[:,n], qc[:,n], qt[:,n], qs[:,n], rw[:,n], rm[:,n], nc[:,n]  = \
-    AandM_2001(nlay, qv0[n], cld_sp[n], fsed, al, sigma, alpha, rho_d[0], cld_mw[n], grav, altl, Tl, pl, Hp, Kzz, mu, eta, rho, cT)
+  q_v[:,n], q_c[:,n], q_t[:,n], q_s[:,n], r_w[:,n], r_m[:,n], N_c[:,n]  = \
+    AandM_2001(nlay, vap_VMR[n], vap_mw[n], cld_sp[n], fsed, al, sigma, alpha, rho_d[n], cld_mw[n], grav, altl, Tl, pl, met, Hp, Kzz, mu, eta, rho, cT)
 
 
 fig = plt.figure() # Start figure 
 
 colour = sns.color_palette('colorblind') # Decent colourblind wheel (10 colours)
 
-plt.plot(Tl,pl/1e6,c=colour[0],ls='solid',lw=2)
+plt.plot(Tl,pl/1e6,c=colour[0],ls='solid',lw=2,label=r'T-p')
+plt.xlabel(r'$T$ [K]',fontsize=16)
+plt.ylabel(r'$p$ [bar]',fontsize=16)
+plt.tick_params(axis='both',which='major',labelsize=14)
+plt.legend()
 plt.yscale('log')
 plt.gca().invert_yaxis()
-
+plt.tight_layout(pad=1.05, h_pad=None, w_pad=None, rect=None)
 
 fig = plt.figure() # Start figure 
 
 colour = sns.color_palette('colorblind') # Decent colourblind wheel (10 colours)
 
-plt.plot(qv,pl/1e6,c=colour[0],ls='solid',lw=2,label='qv')
-plt.plot(qc,pl/1e6,c=colour[1],ls='solid',lw=2,label='qc')
-plt.plot(qt,pl/1e6,c=colour[2],ls='dotted',lw=2,label='qt')
-plt.plot(qs,pl/1e6,c=colour[3],ls='dashed',lw=2,label='qs')
-
+plt.plot(q_v,pl/1e6,c=colour[0],ls='solid',lw=2,label=r'$q_{\rm v}$')
+plt.plot(q_c,pl/1e6,c=colour[1],ls='solid',lw=2,label=r'$q_{\rm c}$')
+plt.plot(q_t,pl/1e6,c=colour[2],ls='dotted',lw=2,label=r'$q_{\rm t}$')
+plt.plot(q_s,pl/1e6,c=colour[3],ls='dashed',lw=2,label=r'$q_{\rm s}$')
+plt.xlabel(r'$q$ [g g$^{-1}$]',fontsize=16)
+plt.ylabel(r'$p$ [bar]',fontsize=16)
+plt.tick_params(axis='both',which='major',labelsize=14)
 plt.legend()
-
 plt.xscale('log')
 plt.yscale('log')
 plt.gca().invert_yaxis()
+plt.tight_layout(pad=1.05, h_pad=None, w_pad=None, rect=None)
 
 fig = plt.figure() # Start figure 
 
 colour = sns.color_palette('colorblind') # Decent colourblind wheel (10 colours)
 
-plt.plot(nc,pl/1e6,c=colour[0],ls='solid',lw=2,label='nc')
-
+plt.plot(N_c,pl/1e6,c=colour[0],ls='solid',lw=2,label=r'$N_{\rm c}$')
+plt.xlabel(r'$N_{\rm c}$ [cm$^{-3}$]',fontsize=16)
+plt.ylabel(r'$p$ [bar]',fontsize=16)
+plt.tick_params(axis='both',which='major',labelsize=14)
 plt.legend()
-
 plt.xscale('log')
 plt.yscale('log')
 plt.gca().invert_yaxis()
-
+plt.tight_layout(pad=1.05, h_pad=None, w_pad=None, rect=None)
 
 fig = plt.figure() # Start figure 
 
 colour = sns.color_palette('colorblind') # Decent colourblind wheel (10 colours)
 
-plt.plot(rw*1e4,pl/1e6,c=colour[0],ls='solid',lw=2,label='rw')
-plt.plot(rm*1e4,pl/1e6,c=colour[1],ls='solid',lw=2,label='rm')
-
+plt.plot(r_w*1e4,pl/1e6,c=colour[0],ls='solid',lw=2,label=r'$r_{\rm w}$')
+plt.plot(r_m*1e4,pl/1e6,c=colour[1],ls='solid',lw=2,label=r'$r_{\rm m}$')
+plt.xlabel(r'$r$ [$\mu$m]',fontsize=16)
+plt.ylabel(r'$p$ [bar]',fontsize=16)
+plt.tick_params(axis='both',which='major',labelsize=14)
 plt.legend()
-
+plt.xlim(1e-3,1e3)
 plt.xscale('log')
 plt.yscale('log')
 plt.gca().invert_yaxis()
+plt.tight_layout(pad=1.05, h_pad=None, w_pad=None, rect=None)
 
 plt.show()
