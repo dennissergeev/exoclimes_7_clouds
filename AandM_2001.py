@@ -80,7 +80,7 @@ def AandM_2001(nlay, vap_VMR, vap_mw, cld_sp, fsed, sigma, alpha, rho_d, cld_mw,
       N_c[k] = 0.0
     else:
 
-      # Target radius of particle when settling velocity = w at each layer
+      # Target radius of particle when settling velocity = fsed * w at each layer
       r_w[k] = (fsed*w[k]*2.0*cT[k]*rho[k])/(np.sqrt(np.pi)*grav*rho_d)
 
       # Median particle radius given log-normal distribution

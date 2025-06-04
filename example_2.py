@@ -12,7 +12,7 @@ import matplotlib.pylab as plt # for plotting
 import seaborn as sns # for good colourblind colour scheme
 import yaml # for reading in the input parameter YAML file
 
-from atm_module import hypsometric, visc_mixture, v_f_sat_adj
+from atm_module import hypsometric, visc_mixture, adiabat_correction, v_f_sat_adj
 
 from T_p_Guillot_2010 import Guillot_T_p # Import function for Guillot 2010 semi-grey profile
 from T_p_Parmentier_2015 import Parmentier_T_p # Import function for Parmentier & Guillot 2015 picket-fence profile
@@ -74,10 +74,13 @@ Tl = np.zeros(nlay)
 if (param['Guillot'] == True):
   Tl[:] = Guillot_T_p(nlay, pbot, pl, k_v, k_ir, Tint, mu_z, Tirr, grav)
 elif (param['Parmentier'] == True):
-  Tl[:] = Parmentier_T_p()
+  Tl[:] = Parmentier_T_p(nlay, pl, Tint, mu_z, Tirr, grav, met, 1)
 else:
   print('Invalid T structure selection')
   quit()
+
+if (param['adibat_corr'] == True):
+  Tl[:] = adiabat_correction(nlay, Tl, pl, kappa)
 
 # Atmosphere mass density
 rho = np.zeros(nlay)
@@ -184,40 +187,35 @@ for n in range(ncld):
     * np.exp(-9.0/2.0 * np.log(sig[n])**2)
 
 fig = plt.figure() # Start figure 
+ax1 = fig.add_subplot(111)
+ax2 = ax1.twiny()
 
-colour = sns.color_palette('colorblind') # Decent colourblind wheel (10 colours)
-
-plt.plot(Tl,pl/1e6,c=colour[0],ls='solid',lw=2,label=r'T-p')
-plt.xlabel(r'$T$ [K]',fontsize=16)
-plt.ylabel(r'$p$ [bar]',fontsize=16)
-plt.tick_params(axis='both',which='major',labelsize=14)
-plt.legend()
-plt.yscale('log')
-plt.gca().invert_yaxis()
-plt.tight_layout(pad=1.05, h_pad=None, w_pad=None, rect=None)
-
-plt.savefig('example_2_T_p.png',dpi=300,bbox_inches='tight')
-
-fig = plt.figure() # Start figure 
+Tp = ax2.plot(Tl,pl/1e6,c='black',label=r'T-p',ls='dotted')
 
 colour = sns.color_palette('colorblind') # Decent colourblind wheel (10 colours)
 
 for n in range(ncld):
   if (n == 0):
-    plt.plot(q_v[:,n],pl/1e6,c=colour[n],ls='solid',lw=2,label=r'$q_{\rm v}$')
-    plt.plot(q_c[:,n],pl/1e6,c=colour[n],ls='dashed',lw=2,label=r'$q_{\rm c}$')
-    plt.plot(q_s[:,n],pl/1e6,c=colour[n],ls='dotted',lw=2,label=r'$q_{\rm s}$')
+    qv = ax1.plot(q_v[:,n],pl/1e6,c=colour[n],ls='dashed',lw=2,label=r'$q_{\rm v}$')
+    qc = ax1.plot(q_c[:,n],pl/1e6,c=colour[n],ls='solid',lw=2,label=r'$q_{\rm c}$')
+    qs = ax1.plot(q_s[:,n],pl/1e6,c=colour[n],ls='dotted',lw=1,label=r'$q_{\rm s}$')
   else:
-    plt.plot(q_v[:,n],pl/1e6,c=colour[n],ls='solid',lw=2)
-    plt.plot(q_c[:,n],pl/1e6,c=colour[n],ls='dashed',lw=2)
-    plt.plot(q_s[:,n],pl/1e6,c=colour[n],ls='dotted',lw=2)    
+    ax1.plot(q_v[:,n],pl/1e6,c=colour[n],ls='dashed',lw=2)
+    ax1.plot(q_c[:,n],pl/1e6,c=colour[n],ls='solid',lw=2)
+    ax1.plot(q_s[:,n],pl/1e6,c=colour[n],ls='dotted',lw=1)    
 
-plt.xlabel(r'$q$ [g g$^{-1}$]',fontsize=16)
-plt.ylabel(r'$p$ [bar]',fontsize=16)
-plt.tick_params(axis='both',which='major',labelsize=14)
-plt.legend()
-plt.xscale('log')
-plt.yscale('log')
+ax1.set_xlabel(r'$q$ [g g$^{-1}$]',fontsize=16)
+ax2.set_xlabel(r'$T$ [K]',fontsize=16)
+ax1.set_ylabel(r'$p$ [bar]',fontsize=16)
+ax1.tick_params(axis='both',which='major',labelsize=14)
+ax2.tick_params(axis='both',which='major',labelsize=14)
+ax1.set_xscale('log')
+ax1.set_yscale('log')
+ax1.set_xlim(1e-8,1e-2)
+ax2.set_zorder(1)
+lns = Tp + qv + qc + qs
+labs = [l.get_label() for l in lns]
+ax2.legend(lns, labs,fontsize=10,loc='upper right')
 plt.gca().invert_yaxis()
 plt.tight_layout(pad=1.05, h_pad=None, w_pad=None, rect=None)
 

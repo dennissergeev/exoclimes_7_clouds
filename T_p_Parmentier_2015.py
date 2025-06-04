@@ -44,7 +44,7 @@ def Bond_Parmentier(Teff0, grav):
 def gam_Parmentier(Teff, table_num):
 
   # Calculates 3 band grey visual gamma values and 2 picket fence IR gamma values
-  # according to the coefficents and equations in:
+  # according to the coefficients and equations in:
   # Parmentier & Menou (2014) and Parmentier et al. (2015)
 
   # Input:
@@ -137,7 +137,7 @@ def gam_Parmentier(Teff, table_num):
       aV3 = -16.54 ; bV3 = 4.74
       aB = 3.0  ; bB = -0.69
 
-    # gam_P coefficents
+    # gam_P coefficients
     if (Teff <= 1400.0):
       aP = -2.36
       bP = 13.92
