@@ -4,11 +4,27 @@
 
 import numpy as np
 
+# Some physical constants
 R = 8.31446261815324e7
 kb = 1.380649e-16
 amu = 1.66053906892e-24
 bar = 1.0e6 # bar to dyne
 
+# Coefficient parameters for Freedman et al. (2014) table fit
+onedivpi = 1.0/np.pi
+c1 = 10.602
+c2 = 2.882
+c3 = 6.09e-15
+c4 = 2.954
+c5 = -2.526
+c6 = 0.843
+c7 = -5.490
+c8_l = -14.051; c8_h = 82.241
+c9_l = 3.055; c9_h = -55.456
+c10_l = 0.024; c10_h = 8.754
+c11_l = 1.877; c11_h = 0.7048
+c12_l = -0.445; c12_h = -0.0414
+c13_l = 0.8321; c13_h = 0.8321
 
 def hypsometric(nlev, Tl, pe, mu, grav):
 
@@ -105,3 +121,75 @@ def v_f_sat_adj(nlay, r_m, sig, grav, rho_d, rho, eta, mfp, cT):
     v_f[k] = np.maximum(v_f[k], 1e-30)
 
   return v_f
+
+def k_Ross_Freedman(Tin, Pin, met):
+
+  # Calculates the IR band Rosseland mean opacity (local T) according to the
+  # Freedman et al. (2014) fit and coefficients
+
+  # Input:
+  # T - Local gas temperature [K]
+  # P - Local gas pressure [dyne]
+  # met - Local metallicity [M/H] (log10 from solar, solar [M/H] = 0.0)
+
+  # Output:
+  # k_IR - IR band Rosseland mean opacity [cm2 g-1]
+
+  T = Tin
+  P = Pin
+
+  Tl10 = np.log10(T)
+  Pl10 = np.log10(P)
+
+  # Low pressure expression
+  k_lowP = c1*np.arctan(Tl10 - c2) \
+    - (c3/(Pl10 + c4))*np.exp((Tl10 - c5)**2) \
+    + c6*met + c7
+
+  # Temperature split for coefficients = 800 K
+  if (T <= 800.0):
+    k_hiP = c8_l + c9_l*Tl10 \
+      + c10_l*Tl10**2 + Pl10*(c11_l + c12_l*Tl10) \
+      + c13_l * met * (0.5 + onedivpi*np.arctan((Tl10 - 2.5) / 0.2))
+  else:
+    k_hiP = c8_h + c9_h*Tl10 \
+      + c10_h*Tl10**2 + Pl10*(c11_h + c12_h*Tl10) \
+      + c13_h * met * (0.5 + onedivpi*np.arctan((Tl10 - 2.5) / 0.2))
+
+  # Total Rosseland mean opacity
+  k_IR = (10.0**k_lowP + 10.0**k_hiP)
+
+  # Avoid divergence in fit for large values
+  k_IR = np.minimum(k_IR,1.0e30)
+
+  return k_IR
+
+def adiabat_correction(nlay,Tl,pl,kappa):
+  # Subroutine that corrects for adiabatic region following Parmentier & Guillot (2015)
+  # But here we correct using kappa rather than the gradient expression from Parmentier & Guillot (2015)
+
+  gradrad = np.zeros(nlay)
+  gradad = np.zeros(nlay)
+  for k in range(nlay-1):
+    gradrad[k] = np.log(Tl[k]/Tl[k+1])/np.log(pl[k]/pl[k+1])
+    gradad[k] = kappa
+
+  gradrad[-1] = 0.0
+  gradad[-1] = 0.0
+
+  iRC = nlay-1
+  prc = pl[-1]
+
+  for k in range(nlay-1, 0, -1):
+    if (gradrad[k] > gradad[k]):
+      iRC = k
+      prc = pl[iRC]
+
+  print('RC boundary: ', prc/1e6)
+
+  if (iRC < nlay):
+    for k in range(iRC, nlay-1, 1):
+      gradad[k] = kappa
+      Tl[k+1] = Tl[k] * (pl[k+1]/pl[k])**gradad[k]
+
+  return Tl

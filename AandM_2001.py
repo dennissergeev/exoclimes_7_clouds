@@ -45,7 +45,9 @@ def AandM_2001(nlay, vap_VMR, vap_mw, cld_sp, fsed, sigma, alpha, rho_d, cld_mw,
       # Use A&M Eq. (7) to get total mixing ratio in layer
       dz = altl[k] - altl[k+1]
       L = al * (Hp[k] + Hp[k+1])/2.0
-      q_t[k] = q_t[k+1] * np.exp(-fsed * dz / L)
+      #q_t[k] = q_t[k+1] * np.exp(-fsed * dz / L)
+
+      q_t[k] = q_s[k] + (q_t[k+1] - q_s[k]) * np.exp(-fsed * dz / L)
 
       # Use A&M Eq. (8) to get condensate fraction
       q_c[k] = np.maximum(0.0,q_t[k] - (Scloud + 1.0)*q_s[k])
@@ -79,7 +81,7 @@ def AandM_2001(nlay, vap_VMR, vap_mw, cld_sp, fsed, sigma, alpha, rho_d, cld_mw,
     else:
 
       # Target radius of particle when settling velocity = w at each layer
-      r_w[k] = (w[k]*2.0*cT[k]*rho[k])/(np.sqrt(np.pi)*grav*rho_d)
+      r_w[k] = (fsed*w[k]*2.0*cT[k]*rho[k])/(np.sqrt(np.pi)*grav*rho_d)
 
       # Median particle radius given log-normal distribution
       r_m[k] = r_w[k] * fsed**(1.0/alpha) * np.exp(-(alpha+6.0)/2.0 * np.log(sigma)**2)

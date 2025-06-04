@@ -12,7 +12,7 @@ import matplotlib.pylab as plt # for plotting
 import seaborn as sns # for good colourblind colour scheme
 import yaml # for reading in the input parameter YAML file
 
-from atm_module import hypsometric, visc_mixture
+from atm_module import hypsometric, visc_mixture, adiabat_correction
 
 from T_p_Guillot_2010 import Guillot_T_p # Import function for Guillot 2010 semi-grey profile
 from T_p_Parmentier_2015 import Parmentier_T_p # Import function for Parmentier & Guillot 2015 picket-fence profile
@@ -71,10 +71,13 @@ Tl = np.zeros(nlay)
 if (param['Guillot'] == True):
   Tl[:] = Guillot_T_p(nlay, pbot, pl, k_v, k_ir, Tint, mu_z, Tirr, grav)
 elif (param['Parmentier'] == True):
-  Tl[:] = Parmentier_T_p()
+  Tl[:] = Parmentier_T_p(nlay, pl, Tint, mu_z, Tirr, grav, met, 1)
 else:
   print('Invalid T structure selection')
   quit()
+
+if (param['adibat_corr'] == True):
+  Tl[:] = adiabat_correction(nlay, Tl, pl, kappa)
 
 # Atmosphere mass density
 rho = np.zeros(nlay)
@@ -128,7 +131,7 @@ r_eff = np.zeros((nlay,ncld))
 N_c = np.zeros((nlay,ncld))
 for n in range(ncld):
   q_v[:,n], q_c[:,n], q_t[:,n], q_s[:,n], r_w[:,n], r_m[:,n], r_eff[:,n], N_c[:,n]  = \
-    AandM_2001(nlay, vap_VMR[n], vap_mw[n], cld_sp[n], fsed[n], sigma[n] alpha[n], rho_d[n], cld_mw[n], grav, altl, Tl, pl, met, al, Hp, Kzz, mu, eta, rho, cT)
+    AandM_2001(nlay, vap_VMR[n], vap_mw[n], cld_sp[n], fsed[n], sigma[n], alpha[n], rho_d[n], cld_mw[n], grav, altl, Tl, pl, met, al, Hp, Kzz, mu, eta, rho, cT)
 
 
 fig = plt.figure() # Start figure 

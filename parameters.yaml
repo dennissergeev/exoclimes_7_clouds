@@ -1,7 +1,7 @@
 A&M:
-  nlay: 200
-  ptop: 1.0e-6
-  pbot: 1000.0
+  nlay: 100
+  ptop: 1.0e-3
+  pbot: 100.0
 
   mu_z: 0.577
   Tirr: 1000.0
@@ -13,8 +13,9 @@ A&M:
   kappa: 0.2857
   mu: 2.33
 
-  Guillot: True
-  Parmentier: False
+  Guillot: False
+  Parmentier: True
+  adibat_corr: True
 
   al: 1.0
   Kzz: 1.0e+7
@@ -28,7 +29,7 @@ A&M:
   cld_sp: ['Fe','MgSiO3']
   rho_d: [7.87,3.2]
   cld_mw: [55.845,100.39]
-  fsed: [1.0, 1.0]
+  fsed: [3.0, 3.0]
   sigma: [2.0, 2.0]
   alpha: [1.3, 1.3]
 
@@ -53,6 +54,7 @@ tracer_saturation_adjustment:
 
   Guillot: True
   Parmentier: False
+  adibat_corr: True
 
   Kzz: 1.0e+8
 
