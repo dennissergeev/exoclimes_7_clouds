@@ -124,10 +124,11 @@ q_t = np.zeros((nlay,ncld))
 q_s = np.zeros((nlay,ncld))
 r_w = np.zeros((nlay,ncld))
 r_m = np.zeros((nlay,ncld))
+r_eff = np.zeros((nlay,ncld))
 N_c = np.zeros((nlay,ncld))
 for n in range(ncld):
-  q_v[:,n], q_c[:,n], q_t[:,n], q_s[:,n], r_w[:,n], r_m[:,n], N_c[:,n]  = \
-    AandM_2001(nlay, vap_VMR[n], vap_mw[n], cld_sp[n], fsed, al, sigma, alpha, rho_d[n], cld_mw[n], grav, altl, Tl, pl, met, Hp, Kzz, mu, eta, rho, cT)
+  q_v[:,n], q_c[:,n], q_t[:,n], q_s[:,n], r_w[:,n], r_m[:,n], r_eff[:,n], N_c[:,n]  = \
+    AandM_2001(nlay, vap_VMR[n], vap_mw[n], cld_sp[n], fsed[n], sigma[n] alpha[n], rho_d[n], cld_mw[n], grav, altl, Tl, pl, met, al, Hp, Kzz, mu, eta, rho, cT)
 
 
 fig = plt.figure() # Start figure 
@@ -147,10 +148,19 @@ fig = plt.figure() # Start figure
 
 colour = sns.color_palette('colorblind') # Decent colourblind wheel (10 colours)
 
-plt.plot(q_v,pl/1e6,c=colour[0],ls='solid',lw=2,label=r'$q_{\rm v}$')
-plt.plot(q_c,pl/1e6,c=colour[1],ls='solid',lw=2,label=r'$q_{\rm c}$')
-plt.plot(q_t,pl/1e6,c=colour[2],ls='dotted',lw=2,label=r'$q_{\rm t}$')
-plt.plot(q_s,pl/1e6,c=colour[3],ls='dashed',lw=2,label=r'$q_{\rm s}$')
+for n in range(ncld):
+  if (n == 0):
+    plt.plot(q_v[:,n],pl/1e6,c=colour[n],ls='solid',lw=2,label=r'$q_{\rm v}$')
+    plt.plot(q_c[:,n],pl/1e6,c=colour[n],ls='dashed',lw=2,label=r'$q_{\rm c}$')
+    plt.plot(q_t[:,n],pl/1e6,c=colour[n],ls='dashdot',lw=2,label=r'$q_{\rm t}$')
+    plt.plot(q_s[:,n],pl/1e6,c=colour[n],ls='dotted',lw=2,label=r'$q_{\rm s}$')
+  else:
+    plt.plot(q_v[:,n],pl/1e6,c=colour[n],ls='solid',lw=2)
+    plt.plot(q_c[:,n],pl/1e6,c=colour[n],ls='dashed',lw=2)
+    plt.plot(q_t[:,n],pl/1e6,c=colour[n],ls='dashdot',lw=2)
+    plt.plot(q_s[:,n],pl/1e6,c=colour[n],ls='dotted',lw=2)    
+
+
 plt.xlabel(r'$q$ [g g$^{-1}$]',fontsize=16)
 plt.ylabel(r'$p$ [bar]',fontsize=16)
 plt.tick_params(axis='both',which='major',labelsize=14)
@@ -164,7 +174,11 @@ fig = plt.figure() # Start figure
 
 colour = sns.color_palette('colorblind') # Decent colourblind wheel (10 colours)
 
-plt.plot(N_c,pl/1e6,c=colour[0],ls='solid',lw=2,label=r'$N_{\rm c}$')
+for n in range(ncld):
+  if (n == 0):
+    plt.plot(N_c[:,n],pl/1e6,c=colour[n],ls='solid',lw=2,label=r'$N_{\rm c}$')
+  else:
+    plt.plot(N_c[:,n],pl/1e6,c=colour[n],ls='solid',lw=2)
 plt.xlabel(r'$N_{\rm c}$ [cm$^{-3}$]',fontsize=16)
 plt.ylabel(r'$p$ [bar]',fontsize=16)
 plt.tick_params(axis='both',which='major',labelsize=14)
@@ -178,8 +192,15 @@ fig = plt.figure() # Start figure
 
 colour = sns.color_palette('colorblind') # Decent colourblind wheel (10 colours)
 
-plt.plot(r_w*1e4,pl/1e6,c=colour[0],ls='solid',lw=2,label=r'$r_{\rm w}$')
-plt.plot(r_m*1e4,pl/1e6,c=colour[1],ls='solid',lw=2,label=r'$r_{\rm m}$')
+for n in range(ncld):
+  if (n == 0):
+    plt.plot(r_w[:,n]*1e4,pl/1e6,c=colour[n],ls='solid',lw=2,label=r'$r_{\rm w}$')
+    plt.plot(r_m[:,n]*1e4,pl/1e6,c=colour[n],ls='dashed',lw=2,label=r'$r_{\rm m}$')
+    plt.plot(r_eff[:,n]*1e4,pl/1e6,c=colour[n],ls='dotted',lw=2,label=r'$r_{\rm eff}$')
+  else:
+    plt.plot(r_w[:,n]*1e4,pl/1e6,c=colour[n],ls='solid',lw=2)
+    plt.plot(r_m[:,n]*1e4,pl/1e6,c=colour[n],ls='dashed',lw=2)   
+    plt.plot(r_eff[:,n]*1e4,pl/1e6,c=colour[n],ls='dotted',lw=2)
 plt.xlabel(r'$r$ [$\mu$m]',fontsize=16)
 plt.ylabel(r'$p$ [bar]',fontsize=16)
 plt.tick_params(axis='both',which='major',labelsize=14)

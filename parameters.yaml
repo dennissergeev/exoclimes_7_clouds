@@ -16,11 +16,8 @@ A&M:
   Guillot: True
   Parmentier: False
 
-  fsed: 1.0
-  sigma: 2.0
-  alpha: 1.3
   al: 1.0
-  Kzz: 1.0e+8
+  Kzz: 1.0e+7
 
   bg_sp: ['H2','He']
   bg_VMR: [0.85,0.15]
@@ -28,17 +25,21 @@ A&M:
   bg_d: [2.827e-8,2.511e-8]
   bg_LJ: [59.7,10.22]
 
-  cld_sp: ['MgSiO3']
-  rho_d: [3.2]
-  cld_mw: [100.39]
-  vap_mw: [100.39]
-  vap_VMR: [3.548e-5]
+  cld_sp: ['Fe','MgSiO3']
+  rho_d: [7.87,3.2]
+  cld_mw: [55.845,100.39]
+  fsed: [1.0, 1.0]
+  sigma: [2.0, 2.0]
+  alpha: [1.3, 1.3]
 
-sat_adjust:
+  vap_mw: [55.845,100.39]
+  vap_VMR: [2.88e-5,3.55e-5]
+
+tracer_saturation_adjustment:
 
   nlay: 100
-  ptop: 1.0e-6
-  pbot: 1000.0
+  ptop: 1.0e-3
+  pbot: 100.0
 
   mu_z: 0.577
   Tirr: 1000.0
@@ -53,11 +54,10 @@ sat_adjust:
   Guillot: True
   Parmentier: False
 
-  tau_cond: 10.0
-  sigma: 2.0
-  rm: 1.0e-4
-  al: 1.0
   Kzz: 1.0e+8
+
+  n_step: 100000
+  t_step: 1000.0
 
   bg_sp: ['H2','He']
   bg_VMR: [0.85,0.15]
@@ -65,10 +65,15 @@ sat_adjust:
   bg_d: [2.827e-8,2.511e-8]
   bg_LJ: [59.7,10.22]
 
-  cld_sp: ['MgSiO3']
-  cld_mw: [100.39]
-  qv0: [3.548e-5]
-  rho_d: [3.2]
+  cld_sp: ['Fe','MgSiO3']
+  rho_d: [7.87,3.2]
+  cld_mw: [55.845,100.39]
+  cld_r_m: [10.0,10.0]
+  cld_sig: [2.0,2.0]
+  cld_tau_c: [10.0, 10.0]
+
+  vap_mw: [55.845,100.39]
+  vap_VMR: [2.88e-5,3.55e-5]
 
 moment:
   mu_z: 1.0

@@ -30,7 +30,9 @@ def q_s_sat(vap_mw, cld_sp, T, p, rho, met):
   if (cld_sp == 'MgSiO3'):
     # Visscher - taken from VIRGA
     p_vap = 10.0**(13.43 - 28665.0/T - met) * bar
-
+  elif (cld_sp == 'Fe'):
+    # Visscher et al. (2010) - taken from CARMA
+    p_vap = 10.0**(7.23 - 20995.0/T) * bar
 
   # Specific gas constant of condensable vapour 
   Rd_v = R/vap_mw
@@ -69,3 +71,37 @@ def visc_mixture(T, nbg, bg_VMR, bg_mw, bg_d, bg_LJ):
   eta = 1.0/eta
 
   return eta
+
+
+def v_f_sat_adj(nlay, r_m, sig, grav, rho_d, rho, eta, mfp, cT):
+
+
+  # Calculate settling velocity v_f [cm s-1] at each layer
+  v_f = np.zeros(nlay)
+  for k in range(nlay):
+
+    # Volume (or mass) weighted mean radius of particle assuming log-normal distribution
+    r_c = np.maximum(r_m * np.exp(7.0/2.0 * np.log(sig)**2),1e-7)
+
+    # Knudsen number
+    Kn = mfp[k]/r_c
+    Kn_b = np.minimum(Kn, 100.0)
+
+    # Cunningham slip factor (Kim et al. 2005)
+    beta = 1.0 + Kn_b*(1.165 + 0.483 * np.exp(-0.997/Kn_b))
+
+    # Stokes regime (Kn << 1) settling velocity (Ohno & Okuzumi 2017)
+    v_f_St = (2.0 * beta * grav * r_c**2 * (rho_d - rho[k]))/(9.0 * eta[k]) \
+      * (1.0 + ((0.45*grav*r_c**3*rho[k]*rho_d)/(54.0*eta[k]**2))**(0.4))**(-1.25)
+
+    # Epstein regime (Kn >> 1) regime settling velocity (Woitke & Helling 2003)
+    v_f_Ep = (np.sqrt(np.pi)*grav*rho_d*r_c)/(2.0*cT[k]*rho[k])
+
+    # tanh interpolation function for Kn ~ 1
+    fx = 0.5 * (1.0 - np.tanh(2.0*np.log10(Kn)))
+
+    # Interpolation for settling velocity
+    v_f[k] = fx*v_f_St + (1.0 - fx)*v_f_Ep
+    v_f[k] = np.maximum(v_f[k], 1e-30)
+
+  return v_f

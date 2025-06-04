@@ -9,7 +9,7 @@ from atm_module import q_s_sat
 Scloud = 0.0
 R = 8.31446261815324e7
 
-def AandM_2001(nlay, vap_VMR, vap_mw, cld_sp, fsed, al, sigma, alpha, rho_d, cld_mw, grav, altl, Tl, pl, met, Hp, Kzz, mu, eta, rho, cT):
+def AandM_2001(nlay, vap_VMR, vap_mw, cld_sp, fsed, sigma, alpha, rho_d, cld_mw, grav, altl, Tl, pl, met, al, Hp, Kzz, mu, eta, rho, cT):
 
 
   # Step through atmosphere to calculate condensate fraction at each layer
@@ -37,7 +37,6 @@ def AandM_2001(nlay, vap_VMR, vap_mw, cld_sp, fsed, al, sigma, alpha, rho_d, cld
       q_v[k] = q_v[k+1]
       q_c[k] = 0.0
       q_t[k] = q_v[k] + q_c[k]
-      # Go to next layer above
       continue
     else:
       # Condensation is triggered - adjust the condensate mixing ratio
@@ -62,15 +61,14 @@ def AandM_2001(nlay, vap_VMR, vap_mw, cld_sp, fsed, al, sigma, alpha, rho_d, cld
   # velocity of the condensate
  
   # Here we do a `cheat method' to quickly get a solution through assuming the particles are
-  # in the Epstein drag regime.
+  # in the Epstein drag regime (Kn >> 1).
   # Find the vertical convective velocity using Kzz = w * Hp (Marley & Robinson 2015)
-  # Scale with assumed mixing length factor and fsed
   w = np.zeros(nlay)
-  w[:] = Kzz[:]/(al*Hp[:])*fsed
+  w[:] = Kzz[:]/(al*Hp[:])
 
-  # Target settling velocity of particles must = w at each layer
   r_w = np.zeros(nlay)
   r_m = np.zeros(nlay)
+  r_eff = np.zeros(nlay)
   N_c = np.zeros(nlay)
   for k in range(nlay):
     if (q_c[k] < 1e-10):
@@ -80,11 +78,17 @@ def AandM_2001(nlay, vap_VMR, vap_mw, cld_sp, fsed, al, sigma, alpha, rho_d, cld
       N_c[k] = 0.0
     else:
 
+      # Target radius of particle when settling velocity = w at each layer
       r_w[k] = (w[k]*2.0*cT[k]*rho[k])/(np.sqrt(np.pi)*grav*rho_d)
 
+      # Median particle radius given log-normal distribution
       r_m[k] = r_w[k] * fsed**(1.0/alpha) * np.exp(-(alpha+6.0)/2.0 * np.log(sigma)**2)
 
-      N_c[k] = (3.0 * q_c[k]* rho[k])/(4.0*np.pi*rho_d*r_m[k]**3) \
+      # Effective particle radius given log-normal distribution
+      r_eff[k] = r_w[k] * fsed**(1.0/alpha) * np.exp(-(alpha+1.0)/2.0 * np.log(sigma)**2)
+
+      # Total number density given log-normal distribution
+      N_c[k] = (3.0 * q_c[k] * rho[k])/(4.0*np.pi*rho_d*r_m[k]**3) \
         * np.exp(-9.0/2.0 * np.log(sigma)**2)
  
-  return q_v, q_c, q_t, q_s, r_w, r_m, N_c
+  return q_v, q_c, q_t, q_s, r_w, r_m, r_eff, N_c
