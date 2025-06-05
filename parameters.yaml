@@ -4,11 +4,11 @@ A&M:
   pbot: 1000.0
 
   mu_z: 0.577
-  Tirr: 1000.0
-  Tint: 500.0
+  Tirr: 1200.0
+  Tint: 400.0
   k_v: 4.0e-3
   k_ir: 1.0e-2 
-  grav: 1000.0
+  grav: 2000.0
   met: 0.0
   kappa: 0.2857
   mu: 2.33
@@ -18,7 +18,7 @@ A&M:
   adibat_corr: True
 
   al: 1.0
-  Kzz: 1.0e+8
+  Kzz: 1.0e+9
 
   bg_sp: ['H2','He']
   bg_VMR: [0.85,0.15]
@@ -43,11 +43,11 @@ tracer_saturation_adjustment:
   pbot: 1000.0
 
   mu_z: 0.577
-  Tirr: 1000.0
-  Tint: 500.0
+  Tirr: 1200.0
+  Tint: 400.0
   k_v: 4.0e-3
   k_ir: 1.0e-2 
-  grav: 1000.0
+  grav: 2000.0
   met: 0.0
   kappa: 0.2857
   mu: 2.33
@@ -56,9 +56,9 @@ tracer_saturation_adjustment:
   Parmentier: True
   adibat_corr: True
 
-  Kzz: 1.0e+8
+  Kzz: 1.0e+9
 
-  n_step: 100000
+  n_step: 1.0e+4
   t_step: 1000.0
 
   bg_sp: ['H2','He']
@@ -72,10 +72,45 @@ tracer_saturation_adjustment:
   cld_mw: [55.845,100.39]
   cld_r_m: [10.0,10.0]
   cld_sig: [2.0,2.0]
-  cld_tau_c: [10.0,10.0]
+  cld_tau_c: [100.0,100.0]
 
   vap_mw: [55.845,100.39]
   vap_VMR: [2.88e-5,3.55e-5]
 
 two_moment_mixed:
-  mu_z: 1.0
+
+  nlay: 100
+  ptop: 1.0e-3
+  pbot: 1000.0
+
+  mu_z: 0.577
+  Tirr: 1200.0
+  Tint: 400.0
+  k_v: 4.0e-3
+  k_ir: 1.0e-2 
+  grav: 2000.0
+  met: 0.0
+  kappa: 0.2857
+  mu: 2.33
+
+  Guillot: False
+  Parmentier: True
+  adibat_corr: True
+
+  Kzz: 1.0e+9
+
+  n_step: 1.0e+4
+  t_step: 1000.0
+
+  bg_sp: ['H2','He']
+  bg_VMR: [0.85,0.15]
+  bg_mw: [2.016,4.00]
+  bg_d: [2.827e-8,2.511e-8]
+  bg_LJ: [59.7,10.22]
+
+  cld_sp: ['Fe','MgSiO3']
+  rho_d: [7.87,3.2]
+  cld_mw: [55.845,100.39]
+
+  vap_mw: [55.845,100.39]
+  vap_VMR: [2.88e-5,3.55e-5]

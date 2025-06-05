@@ -1,4 +1,12 @@
 '''
+Module with various functions for running the code
+
+hypsometric - performs the hydrostatic equilibrium calculation to find the altitude grid of the atmosphere
+vapour pressure - calculates the vapour pressure and saturated mass mixing ratio for a species
+visc_mixture - calculates the dynamic viscosity of a layer given a background gas mixture
+v_f_sat_adj - calculates the settling velocity for the tracer saturation adjustment scheme
+k_Ross_Freedman - uses the Freedman et al. (2014) fitted expression to find the Rosseland mean opacity of the gas
+adiabat_correction - applies an adiabat correction at a given kappa to a T-p profile
 
 '''
 
@@ -45,7 +53,7 @@ def hypsometric(nlev, Tl, pe, mu, grav):
 
   return alte, Hp
 
-def q_s_sat(vap_mw, cld_sp, T, p, rho, met):
+def vapour_pressure(vap_mw, cld_sp, T, p, rho, met):
 
   # Calculate vapour pressure of species in dyne
   match cld_sp:
@@ -110,7 +118,7 @@ def q_s_sat(vap_mw, cld_sp, T, p, rho, met):
       p_vap = 10.0**(11.532 - 23810.0/T - met) * bar
     case 'Na2S':
       # Morley et al. (2012)
-      p_vap =  10.0**(8.550 - 13889.0/T - 0.5*met) * bar
+      p_vap = 10.0**(8.550 - 13889.0/T - 0.5*met) * bar
     case 'ZnS':
       # Elspeth 5 polynomial Barin data fit
       p_vap = np.exp(-4.75507888e4/T + 3.66993865e1 - 2.49490016e-3*T \
@@ -142,17 +150,17 @@ def q_s_sat(vap_mw, cld_sp, T, p, rho, met):
       TC = T - 273.15
       # Huang (2018) - A Simple Accurate Formula for Calculating Saturation Vapor Pressure of Water and Ice
       if (TC < 0.0):
-        f = 0.99882 * exp(0.00000008 * p/pa)
+        f = 0.99882 * np.exp(0.00000008 * p/pa)
         p_vap = np.exp(43.494 - (6545.8/(TC + 278.0)))/(TC + 868.0)**2.0 * pa * f
       else:
-        f = 1.00071 * exp(0.000000045 * p/pa)
+        f = 1.00071 * np.exp(0.000000045 * p/pa)
         p_vap = np.exp(34.494 - (4924.99/(TC + 237.1)))/(TC + 105.0)**1.57 * pa * f
     case 'NH3':
       # Blakley et al. (2024) - experimental to low T and pressure
-      p_vap = exp(-5.55 - 3605.0/T + 4.82792*np.log(T) - 0.024895*T + 2.1669e-5*T**2 - 2.3575e-8 *T**3) * bar
+      p_vap = np.exp(-5.55 - 3605.0/T + 4.82792*np.log(T) - 0.024895*T + 2.1669e-5*T**2 - 2.3575e-8 *T**3) * bar
     case 'CH4':
       # Frey & Schmitt (2009)
-      p_vap = exp(1.051e1 - 1.110e3/T - 4.341e3/T**2 + 1.035e5/T**3 - 7.910e5/T**4) * bar
+      p_vap = np.exp(1.051e1 - 1.110e3/T - 4.341e3/T**2 + 1.035e5/T**3 - 7.910e5/T**4) * bar
     case 'NH4SH':
       #--- E.Lee's fit to Walker & Lumsden (1897) ---
       p_vap = 10.0**(7.8974 - 2409.4/T) * bar
@@ -189,7 +197,7 @@ def q_s_sat(vap_mw, cld_sp, T, p, rho, met):
   # Saturation mass mixing ratio
   q_s = (p_vap/(Rd_v * T))/rho
 
-  return q_s
+  return p_vap, q_s
 
 def visc_mixture(T, nbg, bg_VMR, bg_mw, bg_d, bg_LJ):
 
@@ -222,29 +230,26 @@ def visc_mixture(T, nbg, bg_VMR, bg_mw, bg_d, bg_LJ):
   return eta
 
 
-def v_f_sat_adj(nlay, r_m, sig, grav, rho_d, rho, eta, mfp, cT):
+def v_f_sat_adj(nlay, r_c, sig, grav, rho_d, rho, eta, mfp, cT):
 
 
   # Calculate settling velocity v_f [cm s-1] at each layer
   v_f = np.zeros(nlay)
   for k in range(nlay):
 
-    # Volume (or mass) weighted mean radius of particle assuming log-normal distribution
-    r_c = np.maximum(r_m * np.exp(7.0/2.0 * np.log(sig)**2),1e-7)
-
     # Knudsen number
-    Kn = mfp[k]/r_c
+    Kn = mfp[k]/r_c[k]
     Kn_b = np.minimum(Kn, 100.0)
 
     # Cunningham slip factor (Kim et al. 2005)
     beta = 1.0 + Kn_b*(1.165 + 0.483 * np.exp(-0.997/Kn_b))
 
     # Stokes regime (Kn << 1) settling velocity (Ohno & Okuzumi 2017)
-    v_f_St = (2.0 * beta * grav * r_c**2 * (rho_d - rho[k]))/(9.0 * eta[k]) \
-      * (1.0 + ((0.45*grav*r_c**3*rho[k]*rho_d)/(54.0*eta[k]**2))**(0.4))**(-1.25)
+    v_f_St = (2.0 * beta * grav * r_c[k]**2 * (rho_d - rho[k]))/(9.0 * eta[k]) \
+      * (1.0 + ((0.45*grav*r_c[k]**3*rho[k]*rho_d)/(54.0*eta[k]**2))**(0.4))**(-1.25)
 
     # Epstein regime (Kn >> 1) regime settling velocity (Woitke & Helling 2003)
-    v_f_Ep = (np.sqrt(np.pi)*grav*rho_d*r_c)/(2.0*cT[k]*rho[k])
+    v_f_Ep = (np.sqrt(np.pi)*grav*rho_d*r_c[k])/(2.0*cT[k]*rho[k])
 
     # tanh interpolation function for Kn ~ 1
     fx = 0.5 * (1.0 - np.tanh(2.0*np.log10(Kn)))

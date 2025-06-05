@@ -116,8 +116,6 @@ mfp[:] = (2.0*eta[:]/rho[:]) * np.sqrt((np.pi * mu[:])/(8.0*R*Tl[:]))
 cld_sp = param['cld_sp']
 cld_mw = param['cld_mw']
 r_m =  param['cld_r_m']
-r_m = np.array(r_m)
-r_m[:] = r_m[:] * 1e-4
 sig =  param['cld_sig']
 rho_d = param['rho_d']
 tau_cond = param['cld_tau_c']
@@ -126,6 +124,20 @@ vap_mw =  param['vap_mw']
 vap_VMR = param['vap_VMR']
 
 ncld = len(cld_sp)
+
+# For interest, we calculate log-normal median, mode, mean, effective and volume weighted radii for each species at each layer
+r_med = np.zeros((nlay,ncld))
+r_mode = np.zeros((nlay,ncld))
+r_mean = np.zeros((nlay,ncld))
+r_eff = np.zeros((nlay,ncld))
+r_c = np.zeros((nlay,ncld))
+
+for n in range(ncld):
+  r_med[:,n] = np.maximum(r_m[n] * 1e-4, 1e-7)
+  r_mode[:,n] = np.maximum(r_med[:,n] * np.exp(-np.log(sig[n])**2), 1e-7)
+  r_mean[:,n] = np.maximum(r_med[:,n] * np.exp(1.0/2.0 * np.log(sig[n])**2), 1e-7)
+  r_eff[:,n] = np.maximum(r_med[:,n] * np.exp(5.0/2.0 * np.log(sig[n])**2), 1e-7)
+  r_c[:,n] = np.maximum(r_med[:,n] * np.exp(7.0/2.0 * np.log(sig[n])**2), 1e-7)
 
 # Lower boundary conditions for vapour and condensate
 q_v_bot = np.zeros(ncld)
@@ -136,6 +148,7 @@ q_c_bot = np.zeros(ncld)
 q_c_bot[:] = 1e-30
 
 n_step = param['n_step']
+n_step = int(n_step)
 t_step = param['t_step']
 
 q_v = np.zeros((nlay,ncld))
@@ -157,7 +170,7 @@ for t in range(n_step):
   # Calculate vertical settling velocity for each tracer in each layer
   for n in range(ncld):
     v_f[:,n] = \
-      v_f_sat_adj(nlay, r_m[n], sig[n], grav, rho_d[n], rho, eta, mfp, cT)
+      v_f_sat_adj(nlay, r_c[:,n], sig[n], grav, rho_d[n], rho, eta, mfp, cT)
 
   # Advect condensate tracer (downwards) - give condensate boundary conditions
   for n in range(ncld):
@@ -166,12 +179,13 @@ for t in range(n_step):
 
   # Diffuse vapour and condensate tracer (upward and downward) - give vapour and condensate boundary conditions
   for n in range(ncld):
+    q_c[:,n] = \
+      exp_vert_diff(t_step, nlay, Kzz, rho, alte, altl, q_c[:,n], q_c_bot[n])
+
+  for n in range(ncld):
     q_v[:,n] = \
       exp_vert_diff(t_step, nlay, Kzz, rho, alte, altl, q_v[:,n], q_v_bot[n])
 
-  for n in range(ncld):
-    q_c[:,n] = \
-      exp_vert_diff(t_step, nlay, Kzz, rho, alte, altl, q_c[:,n], q_c_bot[n])
 
   # Limit values to a maximum
   q_c[:,:] = np.maximum(q_c[:,:], 1e-30)
@@ -183,7 +197,7 @@ for t in range(n_step):
 
 # After time-stepping, find N_c at each layer
 for n in range(ncld):
-  N_c[:,n] = (3.0 * q_c[:,n] * rho[:])/(4.0*np.pi*rho_d[n]*r_m[n]**3) \
+  N_c[:,n] = (3.0 * q_c[:,n] * rho[:])/(4.0*np.pi*rho_d[n]*r_med[:,n]**3) \
     * np.exp(-9.0/2.0 * np.log(sig[n])**2)
 
 fig = plt.figure() # Start figure 
@@ -241,6 +255,34 @@ plt.tight_layout(pad=1.05, h_pad=None, w_pad=None, rect=None)
 
 plt.savefig('example_2_N_c.png',dpi=300,bbox_inches='tight')
 
+
+fig = plt.figure() # Start figure 
+
+colour = sns.color_palette('colorblind') # Decent colourblind wheel (10 colours)
+
+for n in range(ncld):
+  if (n == 0):
+    plt.plot(r_mode[:,n]*1e4,pl/1e6,c=colour[n],ls='solid',lw=2,label=r'$r_{\rm mode}$')
+    plt.plot(r_med[:,n]*1e4,pl/1e6,c=colour[n],ls='dashed',lw=2,label=r'$r_{\rm med}$')
+    plt.plot(r_mean[:,n]*1e4,pl/1e6,c=colour[n],ls='dotted',lw=2,label=r'$r_{\rm mean}$')
+    plt.plot(r_eff[:,n]*1e4,pl/1e6,c=colour[n],ls='dashdot',lw=2,label=r'$r_{\rm eff}$')
+    plt.plot(r_c[:,n]*1e4,pl/1e6,c=colour[n],ls='solid',lw=2,label=r'$r_{\rm c}$')
+  else:
+    plt.plot(r_mode[:,n]*1e4,pl/1e6,c=colour[n],ls='solid',lw=2)
+    plt.plot(r_med[:,n]*1e4,pl/1e6,c=colour[n],ls='dashed',lw=2)
+    plt.plot(r_mean[:,n]*1e4,pl/1e6,c=colour[n],ls='dotted',lw=2)
+    plt.plot(r_eff[:,n]*1e4,pl/1e6,c=colour[n],ls='dashdot',lw=2)
+    plt.plot(r_c[:,n]*1e4,pl/1e6,c=colour[n],ls='solid',lw=2)
+plt.xlabel(r'$r$ [$\mu$m]',fontsize=16)
+plt.ylabel(r'$p$ [bar]',fontsize=16)
+plt.tick_params(axis='both',which='major',labelsize=14)
+plt.legend()
+plt.xscale('log')
+plt.yscale('log')
+plt.gca().invert_yaxis()
+plt.tight_layout(pad=1.05, h_pad=None, w_pad=None, rect=None)
+
+plt.savefig('example_2_r_c.png',dpi=300,bbox_inches='tight')
 
 fig = plt.figure() # Start figure 
 

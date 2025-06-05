@@ -4,7 +4,7 @@ In this scheme we use q in mass ratio units [g g^-1], this makes it easier to co
 '''
 
 import numpy as np
-from atm_module import q_s_sat
+from atm_module import vapour_pressure
 
 Scloud = 0.0
 R = 8.31446261815324e7
@@ -24,12 +24,12 @@ def AandM_2001(nlay, vap_VMR, vap_mw, cld_sp, fsed, sigma, alpha, rho_d, cld_mw,
   q_c[-1] = 0.0
   q_v[-1] = vap_VMR * vap_mw/mu[-1]
   q_t[-1] = q_v[-1]
-  q_s[-1] = q_s_sat(vap_mw, cld_sp, Tl[-1], pl[-1], rho[-1], met)
+  p_vap, q_s[-1] = vapour_pressure(vap_mw, cld_sp, Tl[-1], pl[-1], rho[-1], met)
 
   # Set through atmosphere from lower to upper boundary and perform calculation
   for k in range(nlay-2,-1,-1):
     # First calculate saturation mmr of species (qs) at layer
-    q_s[k] = q_s_sat(vap_mw, cld_sp, Tl[k], pl[k], rho[k], met)
+    p_vap, q_s[k] = vapour_pressure(vap_mw, cld_sp, Tl[k], pl[k], rho[k], met)
     # If the condensate mmr vapour is > than saturation mmr then it 
     # condenses in this layer, else it does not
     if (q_v[k+1] <= q_s[k]):

@@ -1,8 +1,6 @@
 '''
 
 
-NOTES:
-
 For more sophisticated A&M style
 
 '''
