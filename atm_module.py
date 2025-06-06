@@ -199,6 +199,32 @@ def vapour_pressure(vap_mw, cld_sp, T, p, rho, met):
 
   return p_vap, q_s
 
+def surface_tension(cld_sp, T):
+
+  TC = T - 273.15
+
+  match cld_sp:
+    case 'TiO2':
+      # Sindel et al. (2022)
+      sig = 589.79 - 0.0708 * T
+    case 'Fe':
+      # http://www.kayelaby.npl.co.uk/general_physics/2_2/2_2_5.html
+      sig = 1862.0 - 0.39 * (TC - 1530.0)
+    case 'MgSiO3':
+      # Janz 1988
+      sig = 197.3 + 0.098 * T
+    case 'KCl':
+      # Janz 1988
+      sig = 160.4 - 0.07*T
+    case _:
+      print('Surface tension species not found: ', cld_sp)
+      print('quitting')
+      quit()     
+
+  sig = np.maximum(10.0, sig) 
+
+  return sig
+
 def visc_mixture(T, nbg, bg_VMR, bg_mw, bg_d, bg_LJ):
 
   # Davidson (1993) dynamical viscosity mixing rule
@@ -229,8 +255,56 @@ def visc_mixture(T, nbg, bg_VMR, bg_mw, bg_d, bg_LJ):
 
   return eta
 
+def v_f_two_moment(nlay, ncld, q_0, q_1, grav, rho_d, nd_atm, rho, eta, mfp, cT):
 
-def v_f_sat_adj(nlay, r_c, sig, grav, rho_d, rho, eta, mfp, cT):
+  # Calculate settling velocity v_f [cm s-1] at each layer
+  v_f = np.zeros(nlay)
+  for k in range(nlay):
+
+    N_c = q_0[k]*nd_atm[k]
+
+    rho_c = np.zeros(ncld)
+    for n in range(ncld):
+      rho_c[n] = q_1[k,n]*rho[k]
+
+    # Total condensed mass [g cm^-3]
+    rho_c_t = np.sum(rho_c[:])
+
+    # Mean mass of particle [g]
+    m_c = rho_c_t/N_c
+
+    # Bulk density of particle mixture [g cm^-3]
+    rho_d_m = 0.0
+    for n in range(ncld):
+      rho_d_m += (rho_c[n]/rho_c_t) * rho_d[n]
+
+    # Mass weighted mean radius of particle [cm]
+    r_c = np.maximum(((3.0*m_c)/(4.0*np.pi*rho_d_m))**(1.0/3.0), 1e-7)
+
+    # Knudsen number
+    Kn = mfp[k]/r_c
+    Kn_b = np.minimum(Kn, 100.0)
+
+    # Cunningham slip factor (Kim et al. 2005)
+    beta = 1.0 + Kn_b*(1.165 + 0.483 * np.exp(-0.997/Kn_b))
+
+    # Stokes regime (Kn << 1) settling velocity (Ohno & Okuzumi 2017)
+    v_f_St = (2.0 * beta * grav * r_c**2 * (rho_d_m - rho[k]))/(9.0 * eta[k]) \
+      * (1.0 + ((0.45*grav*r_c**3*rho[k]*rho_d_m)/(54.0*eta[k]**2))**(0.4))**(-1.25)
+
+    # Epstein regime (Kn >> 1) regime settling velocity (Woitke & Helling 2003)
+    v_f_Ep = (np.sqrt(np.pi)*grav*rho_d_m*r_c)/(2.0*cT[k]*rho[k])
+
+    # tanh interpolation function for Kn ~ 1
+    fx = 0.5 * (1.0 - np.tanh(2.0*np.log10(Kn)))
+
+    # Interpolation for settling velocity
+    v_f[k] = fx*v_f_St + (1.0 - fx)*v_f_Ep
+    v_f[k] = np.maximum(v_f[k], 1e-30)
+
+  return v_f
+
+def v_f_sat_adj(nlay, r_c, grav, rho_d, rho, eta, mfp, cT):
 
 
   # Calculate settling velocity v_f [cm s-1] at each layer

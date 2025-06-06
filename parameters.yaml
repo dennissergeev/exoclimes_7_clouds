@@ -56,9 +56,9 @@ tracer_saturation_adjustment:
   Parmentier: True
   adibat_corr: True
 
-  Kzz: 1.0e+9
+  Kzz: 1.0e+11
 
-  n_step: 1.0e+4
+  n_step: 100
   t_step: 1000.0
 
   bg_sp: ['H2','He']
@@ -97,9 +97,9 @@ two_moment_mixed:
   Parmentier: True
   adibat_corr: True
 
-  Kzz: 1.0e+9
+  Kzz: 1.0e+10
 
-  n_step: 1.0e+4
+  n_step: 1000
   t_step: 1000.0
 
   bg_sp: ['H2','He']
@@ -108,9 +108,18 @@ two_moment_mixed:
   bg_d: [2.827e-8,2.511e-8]
   bg_LJ: [59.7,10.22]
 
-  cld_sp: ['Fe','MgSiO3']
-  rho_d: [7.87,3.2]
-  cld_mw: [55.845,100.39]
+  cld_sp: ['TiO2' ,'Fe','MgSiO3']
+  rho_d: [4.23, 7.87, 3.2]
+  cld_mw: [79.866, 55.845, 100.39]
+  nuc_sp: [True, False, False]
 
-  vap_mw: [55.845,100.39]
-  vap_VMR: [2.88e-5,3.55e-5]
+  vap_mw: [79.866 , 55.845, 100.39]
+  vap_VMR: [9.33e-8, 2.88e-5, 3.55e-5]
+
+  # cld_sp: ['KCl']
+  # rho_d: [1.99]
+  # cld_mw: [74.5513]
+  # nuc_sp: [True]
+
+  # vap_mw: [74.5513]
+  # vap_VMR: [1.17e-7]

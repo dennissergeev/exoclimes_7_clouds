@@ -170,7 +170,7 @@ for t in range(n_step):
   # Calculate vertical settling velocity for each tracer in each layer
   for n in range(ncld):
     v_f[:,n] = \
-      v_f_sat_adj(nlay, r_c[:,n], sig[n], grav, rho_d[n], rho, eta, mfp, cT)
+      v_f_sat_adj(nlay, r_c[:,n], grav, rho_d[n], rho, eta, mfp, cT)
 
   # Advect condensate tracer (downwards) - give condensate boundary conditions
   for n in range(ncld):

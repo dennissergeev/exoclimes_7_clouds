@@ -10,7 +10,6 @@
 import numpy as np
 from atm_module import vapour_pressure
 from scipy.integrate import solve_ivp
-from functools import partial
 
 def dqdt(t, y, q_s_k, tau_cond):
 
@@ -45,12 +44,12 @@ def tracer_sat_adj(nlay, t_step, vap_VMR, vap_mw, cld_sp, rho_d, cld_mw, Tl, pl,
     
   # Prepare integration solver
   y0 = np.zeros(2)
-  t_span = [0.0, t_step]
 
   # Tolerances and time-stepping
   rtol = 1e-3
   atol = 1e-30
   max_step = np.inf
+  t_span = [0.0, t_step]
 
   for k in range(nlay):
 
@@ -75,7 +74,7 @@ def tracer_sat_adj(nlay, t_step, vap_VMR, vap_mw, cld_sp, rho_d, cld_mw, Tl, pl,
     # q_c[k] = y0[1]
 
     # Use Runge-Kutta method to integrate the tracer values in time
-    sol = solve_ivp(dqdt, t_span, y0, method='RK23', rtol=rtol, atol=atol, args=(q_s[k],tau_cond))
+    sol = solve_ivp(dqdt, t_span, y0, method='RK45', rtol=rtol, atol=atol, args=(q_s[k],tau_cond))
 
     # Give back results to the vapour and condensate array
     q_v[k] = sol.y[0,-1]
