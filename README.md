@@ -1,11 +1,31 @@
 # Exoclimes VII 3D clouds practical
  
-Python based practical for Exoclimes VII cloud modelling review talk
+Python based practical for Exoclimes VII cloud modelling review talk.
 This repository acts as a supplemental to the presentation (included here too).
+
+Each example code has extended notes and comments that detail each 
 
 NOTE: The best way to generate a non-irradiated profile (e.g. brown dwarf) is set the zenith angle to a small value (e.g. mu_z = 1e-6) and Tirr to a low value (e.g. Tirr = 1), rather than set Tirr = 0. 
 Then set the Tint to the required Teff. 
 This is just due to the (probably bad) way the semi-grey and picket fence T-p profile calculation was coded.
+
+### Running the code
+
+To run the code for each example, for example, example 1.py, enter the following in the terminal:
+
+> python example_1.py
+
+You will need to install the following packages for the examples to work, (e.g. using conda or pip):
+
++ pyyaml
++ numpy
++ scipy
++ matplotlib
++ seaborn
+
+This should generate matplotlib plot popups, as well as png files in the directory with the results.
+
+WARNING: examples 2 and 3 will take longer to calculate than 1, in the small amount of integration time used as the default here, you're unlikely to achieve a converged solution.
 
 
 ## Key papers for different methods (non-exhaustive)
@@ -25,6 +45,11 @@ This is just due to the (probably bad) way the semi-grey and picket fence T-p pr
 
 * [Ackerman & Marley (2001)](https://ui.adsabs.harvard.edu/abs/2001ApJ...556..872A/abstract)
 * [Rooney et al. (2022)](https://ui.adsabs.harvard.edu/abs/2022ApJ...925...33R/abstract)
+
+### Ormel & Min (ARCiS)
+
+* [Ormel & Min (2019)](https://ui.adsabs.harvard.edu/abs/2019A%26A...622A.121O/abstract)
+* [Huang et al. (2024)](https://ui.adsabs.harvard.edu/abs/2024A%26A...691A.291H/abstract)
 
 ### Helling & Woitke (DRIFT & DIFFU-DRIFT)
 
@@ -60,7 +85,8 @@ This is just due to the (probably bad) way the semi-grey and picket fence T-p pr
 ## DISCLAIMER:
 
 These are codes for learning basics and toy modelling only, and are NOT complete with regards to physics/chemistry in-depth details (which matter a lot), may contain bugs, and are not as tested as the original implementations. They are also not numerically optimised (on purpose for readability).
-So do not use these for end product science, consult an expert in the field for example (non-exhaustive list) A&M -> VIRGA [Natasha Batalha, Caroline Morley, Mark Marley], tracer sat adj -> [Elspeth Lee, Xianyu Tan, Tad Komacek], two mass moment microphysics -> [Elspeth Lee, Kazumasa Ohno] if you want to go further with any of the methods for `real' science.
+
+So do NOT use these for end product science, consult an expert in the field for example (non-exhaustive list) A&M -> VIRGA [Natasha Batalha, Caroline Morley, Mark Marley], tracer sat adj -> [Xianyu Tan, Tad Komacek, Elspeth Lee], two mass moment microphysics -> [Kazumasa Ohno, Elspeth Lee] if you want to go further with any of the methods for `real' science.
 
 For bin models (not used here) consult a CARMA expert e.g. Diana Powell, Peter Gao. \
 For interest in the DRIFT moment methodology consult Christiane Helling or Peter Woitke. \

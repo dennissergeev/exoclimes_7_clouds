@@ -58,7 +58,7 @@ tracer_saturation_adjustment:
 
   Kzz: 1.0e+10
 
-  n_step: 1000
+  n_step: 10000
   t_step: 1000.0
 
   bg_sp: ['H2','He']
@@ -70,7 +70,7 @@ tracer_saturation_adjustment:
   cld_sp: ['Fe','MgSiO3']
   rho_d: [7.87,3.2]
   cld_mw: [55.845,100.39]
-  cld_r_m: [10.0,10.0]
+  cld_r_m: [30.0,30.0]
   cld_sig: [2.0,2.0]
   cld_tau_c: [100.0,100.0]
 
