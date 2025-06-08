@@ -99,7 +99,7 @@ two_moment_mixed:
 
   Kzz: 1.0e+10
 
-  n_step: 1000
+  n_step: 10000
   t_step: 1000.0
 
   bg_sp: ['H2','He']

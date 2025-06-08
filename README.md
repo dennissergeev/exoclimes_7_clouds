@@ -15,9 +15,11 @@ This is just due to the (probably bad) way the semi-grey and picket fence T-p pr
 * [Tsuji (2002)](https://ui.adsabs.harvard.edu/abs/2002ApJ...575..264T/abstract)
 * [Tsuji (2005)](https://ui.adsabs.harvard.edu/abs/2005ApJ...621.1033T/abstract)
 
-### Rossow + Allard & Homeier
+### Rossow + Allard (BT-Settl)
 
 * [Rossow (1978)](https://ui.adsabs.harvard.edu/abs/1978Icar...36....1R/abstract)
+* [Allard et al. (2001)](https://ui.adsabs.harvard.edu/abs/2003IAUS..211..325A/abstract)
+* [Allard et al. (2007)](https://ui.adsabs.harvard.edu/abs/2007A%26A...474L..21A/abstract)
 
 ### Ackerman & Marley (EddySed & VIRGA)
 
@@ -32,7 +34,7 @@ This is just due to the (probably bad) way the semi-grey and picket fence T-p pr
 * [Helling et al. (2008)](https://ui.adsabs.harvard.edu/abs/2008A%26A...485..547H/abstract)
 * [Woitke et al. (2020)](https://ui.adsabs.harvard.edu/abs/2020A%26A...634A..23W/abstract)
 
-### Tracer saturation adjustment
+### Tracer saturation adjustment (Various GCM)
 
 * [Tan & Showman (2019)](https://ui.adsabs.harvard.edu/abs/2019ApJ...874..111T/abstract)
 * [Tan & Showman (2021)](https://ui.adsabs.harvard.edu/abs/2021MNRAS.502.2198T/abstract)
@@ -41,7 +43,18 @@ This is just due to the (probably bad) way the semi-grey and picket fence T-p pr
 
 ### Mass moment method (mini-cloud)
 
+* [Ohno & Okuzumi (2017)](https://ui.adsabs.harvard.edu/abs/2017ApJ...835..261O/abstract)
+* [Lee & Ohno (2025)](https://ui.adsabs.harvard.edu/abs/2025A%26A...695A.111L/abstract)
+* [Lee (2025)](https://ui.adsabs.harvard.edu/abs/2025arXiv250310309L/abstract)
+* [Lee & Ohno (A&A submitted)]()
+
 ### Bin methods (CARMA)
+
+* [Powell et al. (2018)](https://ui.adsabs.harvard.edu/abs/2018ApJ...860...18P/abstract)
+* [Gao et al. (2018)](https://ui.adsabs.harvard.edu/abs/2018ApJ...855...86G/abstract)
+* [Gao et al. (2018b)](https://ui.adsabs.harvard.edu/abs/2018ApJ...863..165G/abstract)
+* [Powell et al. (2019)](https://ui.adsabs.harvard.edu/abs/2019ApJ...887..170P/abstract)
+* [Powell et al. (2022)](https://ui.adsabs.harvard.edu/abs/2024ApJ...969....5P/abstract)
 
 
 ## DISCLAIMER:
@@ -51,4 +64,4 @@ So do not use these for end product science, consult an expert in the field for 
 
 For bin models (not used here) consult a CARMA expert e.g. Diana Powell, Peter Gao. \
 For interest in the DRIFT moment methodology consult Christiane Helling or Peter Woitke. \
-For interest in advanced size distribution dependent mass moment methods consult Elspeth Lee or Kazumasa Ohno. \
+For interest in advanced size distribution dependent mass moment methods consult Elspeth Lee or Kazumasa Ohno.

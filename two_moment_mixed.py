@@ -21,30 +21,34 @@ def calc_cond(ncld, r_c, Kn, n_v, D, vth, sat, m0, V_mix):
 
   for n in range(ncld):
 
-    # # Diffusive limited regime (Kn << 1) [g s-1]
-    # dmdt_low = 4.0 * np.pi * r_c * D[n] * m0[n] * n_v[n] \
-    #   *  (1.0 - 1.0/sat[n])
+    if (sat[n] == 1.0):
+      dmdt[n] = 0.0
+      continue
 
-    # # Free molecular flow regime (Kn >> 1) [g s-1]
+    # Diffusive limited regime (Kn << 1) [g s-1]
+    dmdt_low = 4.0 * np.pi * r_c * D[n] * m0[n] * n_v[n] \
+      *  (1.0 - 1.0/sat[n])
+
+    # Free molecular flow regime (Kn >> 1) [g s-1]
     dmdt_high = 4.0 * np.pi * r_c**2 * vth[n] * m0[n] * n_v[n] * 1.0 \
-      * (1.0 - 1.0/sat[n]) * V_mix[n]
+      * (1.0 - 1.0/sat[n])
 
-    # # If evaporation, weight rate by current condensed volume ratio (Woitke et al. 2020)
-    # if (sat[n] < 1.0):
-    #   dmdt_high = dmdt_high * V_mix[n]
-    #   dmdt_low = dmdt_low * V_mix[n]
+    # If evaporation, weight rate by current condensed volume ratio (Woitke et al. 2020)
+    if (sat[n] < 1.0):
+      dmdt_high = dmdt_high * V_mix[n]
+      dmdt_low = dmdt_low * V_mix[n]
 
-    # # Critical Knudsen number
-    # Kn_crit = Kn * (dmdt_high/dmdt_low)
+    # Critical Knudsen number
+    Kn_crit = Kn * (dmdt_high/dmdt_low)
 
-    # # Kn' (Woitke & Helling 2003)
-    # Knd = Kn/Kn_crit
+    # Kn' (Woitke & Helling 2003)
+    Knd = Kn/Kn_crit
 
-    # # tanh interpolation function
-    # fx = 0.5 * (1.0 - np.tanh(2.0*np.log10(Knd)))
+    # tanh interpolation function
+    fx = 0.5 * (1.0 - np.tanh(2.0*np.log10(Knd)))
 
     # Mass change rate
-    dmdt[n] = dmdt_high #dmdt_low * fx + dmdt_high * (1.0 - fx)
+    dmdt[n] = dmdt_low * fx + dmdt_high * (1.0 - fx)
 
   return dmdt
 
@@ -66,7 +70,7 @@ def calc_hom_nuc(ncld, n_v, T, p, mw_cld, rho_d, cld_nuc, sig_inf, sat, r0):
     else:
 
       alpha = 1.0
-      Nf = 5.0
+      Nf = 0.0
       third = 1.0/3.0
       twothird = 2.0/3.0
 
@@ -121,7 +125,44 @@ def calc_seed_evap(ncld, N_c, m_c, m_seed, sat, cld_nuc):
 
   return J_evap
 
-def dqdt(t, y, ncld, p_vap, vth, D, sig_inf, Rd_v, cld_nuc, nd_atm, rho, mfp, T, p, m_seed, rho_d, m0, cld_mw, r0):
+def calc_coag(T, m_c, r_c, beta, eta):
+
+  # Particle diffusion rate
+  D_r = (kb*T*beta)/(6.0*np.pi*eta*r_c)
+
+  # Thermal velocity limit rate
+  V_r = np.sqrt((8.0*kb*T)/(np.pi*m_c))
+
+  # Moran (2022) method using diffusive Knudsen number
+  Knd = (8.0*D_r)/(np.pi*V_r*r_c)
+  phi = 1.0/np.sqrt(1.0 + np.pi**2/8.0 * Knd**2)
+
+  f_coag = (4.0*kb*T*beta)/(3.0*eta) * phi
+
+  return f_coag
+
+def calc_coal(grav, r_c, Kn, vf):
+
+  eps = 0.5
+
+  # Estimate differential velocity
+  d_vf = eps * vf
+
+  # Calculate E
+  if (Kn >= 1.0):
+    # E = 1 when Kn > 1
+    E = 1.0
+  else:
+    #Calculate Stokes number
+    Stk = (vf * d_vf)/(grav * r_c)
+    E = np.maximum(0.0,1.0 - 0.4*Stk**(-0.75))
+
+  # Coalesence flux (Zeroth moment) [cm3 s-1]
+  f_coal = 2.0*np.pi*r_c**2*d_vf*E
+
+  return f_coal
+
+def dqdt(t, y, ncld, p_vap, vth, D, sig_inf, Rd_v, cld_nuc, nd_atm, rho, mfp, T, p, m_seed, rho_d, m0, cld_mw, r0, eta, grav, cT):
 
   # Limit y values
   y[:] = np.maximum(y[:],1e-30)
@@ -168,6 +209,24 @@ def dqdt(t, y, ncld, p_vap, vth, D, sig_inf, Rd_v, cld_nuc, nd_atm, rho, mfp, T,
   # Knudsen number
   Kn = mfp/r_c
 
+  #Cunningham slip factor (Kim et al. 2005)
+  Kn_b = np.minimum(Kn, 100.0)
+  beta = 1.0 + Kn_b*(1.165 + 0.483 * np.exp(-0.997/Kn_b))
+
+  # Settling velocity (Stokes regime)
+  vf_s = (2.0 * beta * grav * r_c**2 * (rho_d_m - rho))/(9.0 * eta) \
+    * (1.0 + ((0.45*grav*r_c**3*rho*rho_d_m)/(54.0*eta**2))**(0.4))**(-1.25)
+
+  # Settling velocity (Epstein regime)
+  vf_e = (np.sqrt(np.pi)*grav*rho_d_m*r_c)/(2.0*cT*rho)
+
+  # tanh interpolation function
+  fx = 0.5 * (1.0 - np.tanh(2.0*np.log10(Kn)))
+
+  # Interpolation for settling velocity
+  vf = fx*vf_s + (1.0 - fx)*vf_e
+  vf = np.maximum(vf, 1e-30)
+
   # Calculate condensation/evaporation rate
   f_cond = calc_cond(ncld, r_c, Kn, n_v, D, vth, sat, m0, V_mix)
 
@@ -177,13 +236,14 @@ def dqdt(t, y, ncld, p_vap, vth, D, sig_inf, Rd_v, cld_nuc, nd_atm, rho, mfp, T,
   # Calculate seed particle evaporation rate
   f_seed_evap = calc_seed_evap(ncld, N_c, m_c, m_seed, sat, cld_nuc)
 
-  # Here you could also calculate coagulation and coalescence collisional growth rates -
-  # but not included in this example - but we keep dummy variables here so you can see the form and scaling of the equations
-  f_coag = 0.0
-  f_coal = 0.0
+  # Calculate Brownian coagulation rate
+  f_coag = calc_coag(T, m_c, r_c, beta, eta)
+
+  # Calculate gravitational coalescence rate
+  f_coal = calc_coal(grav, r_c, Kn, vf)
 
   # Calculate final net flux rate for each moment and vapour
-  f[0] = np.sum(f_nuc_hom[:] + f_seed_evap[:]) + (f_coag + f_coal)*N_c**2
+  f[0] = np.sum(f_nuc_hom[:] + f_seed_evap[:]) - (f_coag + f_coal)*N_c**2
   f[1:2+ncld-1] = m_seed[:]*(f_nuc_hom[:]  + f_seed_evap[:]) + f_cond[:]*N_c
   f[2+ncld-1:] = -f[1:2+ncld-1]
 
@@ -207,7 +267,7 @@ def dqdt(t, y, ncld, p_vap, vth, D, sig_inf, Rd_v, cld_nuc, nd_atm, rho, mfp, T,
 
   return f
 
-def two_moment_mixed(nlay, ncld, t_step, vap_VMR, vap_mw, cld_sp, rho_d, cld_mw, Tl, pl, nd_atm, rho, mfp, mu, met, cld_nuc, q_v, q_0, q_1):
+def two_moment_mixed(nlay, ncld, t_step, vap_VMR, vap_mw, cld_sp, rho_d, cld_mw, Tl, pl, nd_atm, rho, mfp, eta, cT, mu, grav, met, cld_nuc, q_v, q_0, q_1):
 
   # work arrays
   p_vap = np.zeros(ncld)
@@ -238,7 +298,7 @@ def two_moment_mixed(nlay, ncld, t_step, vap_VMR, vap_mw, cld_sp, rho_d, cld_mw,
 
   # Tolerances and time-stepping
   rtol = 1e-3
-  atol = 1e-30
+  atol = 1e-99
   max_step = np.inf
   t_span = [0.0, t_step]
 
@@ -266,7 +326,7 @@ def two_moment_mixed(nlay, ncld, t_step, vap_VMR, vap_mw, cld_sp, rho_d, cld_mw,
 
     # Use implicit stiff method to integrate the tracer values in time
     sol = solve_ivp(dqdt, t_span, y0, method='Radau', rtol=rtol, atol=atol, \
-      args=(ncld, p_vap, vth, D, sig_inf, Rd_v, cld_nuc, nd_atm[k], rho[k], mfp[k], Tl[k], pl[k], m_seed, rho_d, m0, cld_mw, r0))
+      args=(ncld, p_vap, vth, D, sig_inf, Rd_v, cld_nuc, nd_atm[k], rho[k], mfp[k], Tl[k], pl[k], m_seed, rho_d, m0, cld_mw, r0, eta[k], grav, cT[k]))
 
     # Give back results to the vapour and condensate array
     q_0[k] = sol.y[0,-1]

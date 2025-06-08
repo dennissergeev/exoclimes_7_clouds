@@ -152,7 +152,7 @@ for t in range(n_step):
 
   # Perform cloud microphysics in each layer
   q_v[:,:], q_0[:], q_1[:,:], q_s[:,:] = \
-    two_moment_mixed(nlay, ncld, t_step, vap_VMR, vap_mw, cld_sp, rho_d, cld_mw, Tl, pl, nd_atm, rho, mfp, mu, met, cld_nuc, q_v, q_0, q_1)
+    two_moment_mixed(nlay, ncld, t_step, vap_VMR, vap_mw, cld_sp, rho_d, cld_mw, Tl, pl, nd_atm, rho, mfp, eta, cT, mu, grav, met, cld_nuc, q_v, q_0, q_1)
 
   # Calculate vertical settling velocity for each moment in each layer
   v_f[:] = v_f_two_moment(nlay, ncld, q_0, q_1, grav, rho_d, nd_atm, rho, eta, mfp, cT)
