@@ -25,6 +25,8 @@ You will need to install the following packages for the examples to work, (e.g. 
 
 This should generate matplotlib plot popups, as well as png files in the directory with the results.
 
+Parameters for each example can be modified in the parameters.yaml file.
+
 WARNING: examples 2 and 3 will take longer to calculate than 1, in the small amount of integration time used as the default here, you're unlikely to achieve a converged solution.
 
 
