@@ -6,9 +6,16 @@ This repository acts as a supplemental to the presentation (included here too).
 Each example code has extended notes and line-by-line comments that detail each part of each method. 
 Suggestions, ideas and improvements that help the learning/user experience are most welcome!
 
+Each example used a 1D approach to demonstrate the salient features of each approach.
+It is relatively simple to design 3D versions and couple to hydrodynamic models (e.g. GCMs).
+
+* Example 1: Ackerman & Marley (2001) model
+* Example 2: Tracer saturation adustment model
+* Example 3: Two-moment monodisperse mass moment mixed material model
+
 NOTE: The best way to generate a non-irradiated profile (e.g. brown dwarf) is set the zenith angle to a small value (e.g. mu_z = 1e-6) and Tirr to a low value (e.g. Tirr = 1), rather than set Tirr = 0. 
 Then set the Tint to the required Teff. 
-This is just due to the (probably bad) way the semi-grey and picket fence T-p profile calculation was coded.
+This is just due to the (probably bad) way the semi-grey and picket-fence T-p profile calculation was coded.
 
 ### Running the code
 
