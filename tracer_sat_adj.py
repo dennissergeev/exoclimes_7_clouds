@@ -1,10 +1,14 @@
 '''
-  Here we use the Bogacki-Shampine 3(2) Runge-Kutta method for time integration, which is usually good enough.
-  Simpler methods can be used such as Euler, or higher order Runge-Kutta methods such as Dormand-Price.
+  Here we use the Dormand-Price 5(4) Runge-Kutta method for time integration, which is accurate, but probably overkill.
+  Simpler methods can be used such as Euler (see commented out section), or lower/higher order Runge-Kutta methods.
 
   Tracer saturation adjustment should generally not be stiff if the tau_cond value is reasonable, 
-  if stiffness is encountered (for some reason) then you would need to switch to an implicit ODE solver.
+  if stiffness is encountered (for some reason) then you would need to switch to an implicit ODE solver, which would be much slower.
 
+  Main functions: 
+    tracer_sat_adj - prepares input and integrator
+  Aux functions: 
+    dqdt - finds the RHS of the tracer saturation adjustment scheme for the time-stepping scheme (dq/dt term)
 '''
 
 import numpy as np
@@ -33,8 +37,6 @@ def dqdt(t, y, q_s_k, tau_cond):
   # RHS of condensate is negative vapour RHS
   f[1] = -f[0]
 
-  #print(t, f)
-
   return f
 
 def tracer_sat_adj(nlay, t_step, vap_VMR, vap_mw, cld_sp, rho_d, cld_mw, Tl, pl, rho, met, tau_cond, q_v, q_c):
@@ -62,7 +64,7 @@ def tracer_sat_adj(nlay, t_step, vap_VMR, vap_mw, cld_sp, rho_d, cld_mw, Tl, pl,
 
     # Perform sub-time-stepping integration  (alternative handmade simple Euler method)
     # t_now = 0.0
-    # t_sub = tau_cond
+    # t_sub = tau_cond # Usually a suitable timestep is the condensation timescale
     # while t_now < t_step:
     #   # Avoid overshooting the timestep value
     #   if ((t_now + t_sub) > t_step):
@@ -73,7 +75,7 @@ def tracer_sat_adj(nlay, t_step, vap_VMR, vap_mw, cld_sp, rho_d, cld_mw, Tl, pl,
     # q_v[k] = y0[0]
     # q_c[k] = y0[1]
 
-    # Use Runge-Kutta method to integrate the tracer values in time
+    # Use explicit Runge-Kutta method to integrate the tracer values in time
     sol = solve_ivp(dqdt, t_span, y0, method='RK45', rtol=rtol, atol=atol, args=(q_s[k],tau_cond))
 
     # Give back results to the vapour and condensate array

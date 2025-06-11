@@ -5,8 +5,9 @@ hypsometric - performs the hydrostatic equilibrium calculation to find the altit
 vapour pressure - calculates the vapour pressure and saturated mass mixing ratio for a species
 visc_mixture - calculates the dynamic viscosity of a layer given a background gas mixture
 v_f_sat_adj - calculates the settling velocity for the tracer saturation adjustment scheme
+v_f_two_moment -  calculates the settling velocity for the two-moment mixed scheme
 k_Ross_Freedman - uses the Freedman et al. (2014) fitted expression to find the Rosseland mean opacity of the gas
-adiabat_correction - applies an adiabat correction at a given kappa to a T-p profile
+adiabat_correction - applies an adiabat gradient correction at a given kappa to a T-p profile
 
 '''
 
@@ -17,7 +18,7 @@ R = 8.31446261815324e7
 kb = 1.380649e-16
 amu = 1.66053906892e-24
 
-#Conversions to dyne
+# Conversions to dyne
 bar = 1.0e6 # bar to dyne
 atm = 1.01325e6 # atm to dyne
 pa = 10.0 # pa to dyn
@@ -258,6 +259,7 @@ def visc_mixture(T, nbg, bg_VMR, bg_mw, bg_d, bg_LJ):
 def v_f_two_moment(nlay, ncld, q_0, q_1, grav, rho_d, nd_atm, rho, eta, mfp, cT):
 
   # Calculate settling velocity v_f [cm s-1] at each layer
+
   v_f = np.zeros(nlay)
   for k in range(nlay):
 
@@ -306,8 +308,8 @@ def v_f_two_moment(nlay, ncld, q_0, q_1, grav, rho_d, nd_atm, rho, eta, mfp, cT)
 
 def v_f_sat_adj(nlay, r_c, grav, rho_d, rho, eta, mfp, cT):
 
-
   # Calculate settling velocity v_f [cm s-1] at each layer
+
   v_f = np.zeros(nlay)
   for k in range(nlay):
 
@@ -377,8 +379,9 @@ def k_Ross_Freedman(Tin, Pin, met):
   return k_IR
 
 def adiabat_correction(nlay,Tl,pl,kappa):
+
   # Subroutine that corrects for adiabatic region following Parmentier & Guillot (2015)
-  # But here we correct using kappa rather than the gradient expression from Parmentier & Guillot (2015)
+  # But here we correct using kappa directly rather than the gradient expression from Parmentier & Guillot (2015)
 
   gradrad = np.zeros(nlay)
   gradad = np.zeros(nlay)

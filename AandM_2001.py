@@ -1,19 +1,49 @@
 '''
-
-In this scheme we use q in mass ratio units [g g^-1], this makes it easier to compare to other schemes.
+A simple interpretation and coding of the Ackerman & Marley (2001) scheme.
+To find the particle settling radius, we use the same method as VIRGA, but include potential for Epstein regime particle sizes.
 '''
 
 import numpy as np
 from atm_module import vapour_pressure
+from scipy.optimize import root_scalar
 
 Scloud = 0.0
 R = 8.31446261815324e7
 
-def AandM_2001(nlay, vap_VMR, vap_mw, cld_sp, fsed, sigma, alpha, rho_d, cld_mw, grav, altl, Tl, pl, met, al, Hp, Kzz, mu, eta, rho, cT):
+def v_f(r_c, grav, rho_d, rho, eta, mfp, cT, w):
+
+  # Settling velocity function for the root finding algorithm
+
+  # Knudsen number
+  Kn = mfp/r_c
+  Kn_b = np.minimum(Kn, 100.0)
+
+  # Cunningham slip factor (Kim et al. 2005)
+  beta = 1.0 + Kn_b*(1.165 + 0.483 * np.exp(-0.997/Kn_b))
+
+  # Stokes regime (Kn << 1) settling velocity (Ohno & Okuzumi 2017)
+  v_f_St = (2.0 * beta * grav * r_c**2 * (rho_d - rho))/(9.0 * eta) \
+    * (1.0 + ((0.45*grav*r_c**3*rho*rho_d)/(54.0*eta**2))**(0.4))**(-1.25)
+
+  # Epstein regime (Kn >> 1) regime settling velocity (Woitke & Helling 2003)
+  v_f_Ep = (np.sqrt(np.pi)*grav*rho_d*r_c)/(2.0*cT*rho)
+
+  # tanh interpolation function for Kn ~ 1
+  fx = 0.5 * (1.0 - np.tanh(2.0*np.log10(Kn)))
+
+  # Interpolation for settling velocity
+  v_f = fx*v_f_St + (1.0 - fx)*v_f_Ep
+
+  # Settling velocity to fit is fall velocity minus vertical velocity
+  w_diff = v_f - w
+
+  return w_diff
 
 
-  # Step through atmosphere to calculate condensate fraction at each layer
-  # using A&M 2001 Eq. (8)
+def AandM_2001(nlay, vap_VMR, vap_mw, cld_sp, fsed, sigma, alpha, rho_d, cld_mw, grav, altl, Tl, pl, met, al, Hp, Kzz, mu, eta, rho, cT, mfp):
+
+
+  # Step through atmosphere to calculate condensate fraction at each layer using A&M 2001 Eq. (8)
 
   q_v = np.zeros(nlay)
   q_c = np.zeros(nlay)
@@ -59,12 +89,9 @@ def AandM_2001(nlay, vap_VMR, vap_mw, cld_sp, fsed, sigma, alpha, rho_d, cld_mw,
 
   # We now have the condensation profile, next we use
   # the balance equation to estimate the cloud properties
-  # The upward diffusion of total condensate must equal the downward
-  # velocity of the condensate
+  # The upward diffusion of total condensate must equal the downward velocity of the condensate
  
-  # Here we do a `cheat method' to quickly get a solution through assuming the particles are
-  # in the Epstein drag regime (Kn >> 1).
-  # Find the vertical convective velocity using Kzz = w * Hp (Marley & Robinson 2015)
+  # Find the vertical convective velocity using Kzz = w * alpha*Hp (Marley & Robinson 2015)
   w = np.zeros(nlay)
   w[:] = Kzz[:]/(al*Hp[:])
 
@@ -74,14 +101,24 @@ def AandM_2001(nlay, vap_VMR, vap_mw, cld_sp, fsed, sigma, alpha, rho_d, cld_mw,
   N_c = np.zeros(nlay)
   for k in range(nlay):
     if (q_c[k] < 1e-10):
-      # If low condensate fraction, assume zero
+      # If low condensate mass fraction, assume zero
       r_w[k] = 0.0
       r_m[k] = 0.0
       N_c[k] = 0.0
     else:
 
-      # Target radius of particle when settling velocity = fsed * w at each layer
-      r_w[k] = (fsed*w[k]*2.0*cT[k]*rho[k])/(np.sqrt(np.pi)*grav*rho_d)
+      # Follow the exact same `og' method VIRGA uses, VIRGA has other, probably better, methods included.
+
+      # Range of particle sizes to optimise for [cm]
+      r_low = 1.0e-7
+      r_up = 10.0
+
+      # Find the optimal radius value that minimises the v_f function
+      opt_val = root_scalar(v_f, bracket=[r_low, r_up], method='brentq', 
+        args=(grav, rho_d, rho[k], eta[k], mfp[k], cT[k], w[k]))
+
+      # Settling particle radius
+      r_w[k] = opt_val.root
 
       # Median particle radius given log-normal distribution
       r_m[k] = r_w[k] * fsed**(1.0/alpha) * np.exp(-(alpha+6.0)/2.0 * np.log(sigma)**2)

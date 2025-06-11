@@ -1,10 +1,11 @@
 '''
+Example 2: Tracer saturation adjustment scheme
 
+Steps:
 
-NOTES:
-
-For more sophisticated A&M style
-
+1. Generate a T-p profile using semi-grey or picket-fence semi-analytical solutions.
+2. Timestep the vertical settling and diffusion scheme with saturation adjustment scheme, given parameters in parameters.yaml.
+3. Generate output plots and png.
 '''
 
 import numpy as np # for efficient array numerical operations 

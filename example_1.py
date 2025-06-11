@@ -1,8 +1,11 @@
 '''
+Example 1: Ackerman and Marley (2001) test
 
+Steps:
 
-For more sophisticated A&M style
-
+1. Generate a T-p profile using semi-grey or picket-fence semi-analytical solutions.
+2. Perform A&M 2001 scheme given parameters in parameters.yaml.
+3. Generate output plots and png.
 '''
 
 import numpy as np # for efficient array numerical operations 
@@ -17,6 +20,7 @@ from T_p_Parmentier_2015 import Parmentier_T_p # Import function for Parmentier 
 
 from AandM_2001 import AandM_2001
 
+R = 8.31446261815324e7
 kb = 1.380649e-16
 amu = 1.66053906892e-24
 
@@ -77,6 +81,10 @@ else:
 if (param['adibat_corr'] == True):
   Tl[:] = adiabat_correction(nlay, Tl, pl, kappa)
 
+# for k in range(nlay):
+#   print(str(pl[k]/1e6) + ', ' + str(Tl[k]) + ', ' + str(Kzz[k]))
+# quit()
+
 # Atmosphere mass density
 rho = np.zeros(nlay)
 rho[:] = (pl[:]*mu[:]*amu)/(kb * Tl[:])
@@ -104,6 +112,10 @@ eta = np.zeros(nlay)
 for k in range(nlay):
   eta[k] = visc_mixture(Tl[k], nbg, bg_VMR, bg_mw, bg_d, bg_LJ)
 
+# Find mean free path of each layer
+mfp = np.zeros(nlay)
+mfp[:] = (2.0*eta[:]/rho[:]) * np.sqrt((np.pi * mu[:])/(8.0*R*Tl[:]))
+
 cld_sp = param['cld_sp']
 cld_mw = param['cld_mw']
 rho_d = param['rho_d']
@@ -129,7 +141,7 @@ r_eff = np.zeros((nlay,ncld))
 N_c = np.zeros((nlay,ncld))
 for n in range(ncld):
   q_v[:,n], q_c[:,n], q_t[:,n], q_s[:,n], r_w[:,n], r_m[:,n], r_eff[:,n], N_c[:,n]  = \
-    AandM_2001(nlay, vap_VMR[n], vap_mw[n], cld_sp[n], fsed[n], sigma[n], alpha[n], rho_d[n], cld_mw[n], grav, altl, Tl, pl, met, al, Hp, Kzz, mu, eta, rho, cT)
+    AandM_2001(nlay, vap_VMR[n], vap_mw[n], cld_sp[n], fsed[n], sigma[n], alpha[n], rho_d[n], cld_mw[n], grav, altl, Tl, pl, met, al, Hp, Kzz, mu, eta, rho, cT, mfp)
 
 
 fig = plt.figure() # Start figure 
