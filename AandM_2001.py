@@ -1,6 +1,12 @@
 '''
 A simple interpretation and coding of the Ackerman & Marley (2001) scheme.
 To find the particle settling radius, we use the same method as VIRGA, but include potential for Epstein regime particle sizes.
+
+
+Main functions: 
+  AandM_2001 - atmosphere stepper function
+Aux functions:
+  v_f - function for the settling radius root finder
 '''
 
 import numpy as np

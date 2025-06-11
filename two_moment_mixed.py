@@ -306,6 +306,7 @@ def two_moment_mixed(nlay, ncld, t_step, vap_VMR, vap_mw, cld_sp, rho_d, cld_mw,
   sig_inf = np.zeros(ncld)
   Rd_v = np.zeros(ncld)
 
+  # Calculate come fundamental properties, such as unit masses, volumes etc
   m0 = np.zeros(ncld)
   V0 = np.zeros(ncld)
   r0 = np.zeros(ncld)

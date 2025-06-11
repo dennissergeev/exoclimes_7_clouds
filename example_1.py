@@ -6,6 +6,7 @@ Steps:
 1. Generate a T-p profile using semi-grey or picket-fence semi-analytical solutions.
 2. Perform A&M 2001 scheme given parameters in parameters.yaml.
 3. Generate output plots and png.
+
 '''
 
 import numpy as np # for efficient array numerical operations 

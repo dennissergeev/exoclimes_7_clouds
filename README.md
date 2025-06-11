@@ -3,7 +3,8 @@
 Python based practical for Exoclimes VII cloud modelling review talk.
 This repository acts as a supplemental to the presentation (included here too).
 
-Each example code has extended notes and comments that detail each 
+Each example code has extended notes and line-by-line comments that detail each part of each method. 
+Suggestions, ideas and improvements that help the learning/user experience are most welcome!
 
 NOTE: The best way to generate a non-irradiated profile (e.g. brown dwarf) is set the zenith angle to a small value (e.g. mu_z = 1e-6) and Tirr to a low value (e.g. Tirr = 1), rather than set Tirr = 0. 
 Then set the Tint to the required Teff. 
@@ -25,7 +26,7 @@ You will need to install the following packages for the examples to work, (e.g. 
 
 This should generate matplotlib plot popups, as well as png files in the directory with the results.
 
-Parameters for each example can be modified in the parameters.yaml file.
+Parameters for each example can be modified in the parameters.yaml file - feel free to modify this to try out different scenarios.
 
 WARNING: examples 2 and 3 will take longer to calculate than 1, in the small amount of integration time used as the default here, you're unlikely to achieve a converged solution.
 
@@ -61,7 +62,7 @@ WARNING: examples 2 and 3 will take longer to calculate than 1, in the small amo
 * [Helling et al. (2008)](https://ui.adsabs.harvard.edu/abs/2008A%26A...485..547H/abstract)
 * [Woitke et al. (2020)](https://ui.adsabs.harvard.edu/abs/2020A%26A...634A..23W/abstract)
 
-### Tracer saturation adjustment (Various GCM)
+### Tracer saturation adjustment (Used in various GCMs)
 
 * [Tan & Showman (2019)](https://ui.adsabs.harvard.edu/abs/2019ApJ...874..111T/abstract)
 * [Tan & Showman (2021)](https://ui.adsabs.harvard.edu/abs/2021MNRAS.502.2198T/abstract)

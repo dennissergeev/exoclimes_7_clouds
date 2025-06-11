@@ -7,8 +7,9 @@
 
   Main functions: 
     tracer_sat_adj - prepares input and integrator
-  Aux functions: 
     dqdt - finds the RHS of the tracer saturation adjustment scheme for the time-stepping scheme (dq/dt term)
+  Aux functions: 
+    None
 '''
 
 import numpy as np
