@@ -218,9 +218,7 @@ def surface_tension(cld_sp, T):
       # Janz 1988
       sig = 160.4 - 0.07*T
     case _:
-      print('Surface tension species not found: ', cld_sp)
-      print('quitting')
-      quit()     
+      print('Surface tension species not found: ', cld_sp)   
 
   sig = np.maximum(10.0, sig) 
 

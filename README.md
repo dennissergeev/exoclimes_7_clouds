@@ -6,7 +6,7 @@ This repository acts as a supplemental to the presentation (included here too).
 Each example code has extended notes and line-by-line comments that detail each part of each method. 
 Suggestions, ideas and improvements that help the learning/user experience are most welcome!
 
-Each example used a 1D approach to demonstrate the salient features of each approach.
+Each example uses a 1D approach to demonstrate the salient features of each approach.
 It is relatively simple to design 3D versions and couple to hydrodynamic models (e.g. GCMs).
 
 * Example 1: Ackerman & Marley (2001) model
@@ -34,6 +34,8 @@ You will need to install the following packages for the examples to work, (e.g. 
 This should generate matplotlib plot popups, as well as png files in the directory with the results.
 
 Parameters for each example can be modified in the parameters.yaml file - feel free to modify this to try out different scenarios.
+Various condensation species can be set, see the `vapour_pressure' function in the atm_module.py file for a complete list.
+Then set the appropriate paramaters in the parameter.yaml file for that species.
 
 WARNING: examples 2 and 3 will take longer to calculate than 1, in the small amount of integration time used as the default here, you're unlikely to achieve a converged solution.
 
