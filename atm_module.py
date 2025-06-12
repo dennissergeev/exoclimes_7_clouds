@@ -202,23 +202,86 @@ def vapour_pressure(vap_mw, cld_sp, T, p, rho, met):
 
 def surface_tension(cld_sp, T):
 
+  # Function to calculate the surface tension (erg cm^-2) for different species
+
   TC = T - 273.15
 
   match cld_sp:
+    case 'C':
+      # Tabak et al. (1995)
+      sig = 1400.0
+    case 'TiC':
+      # Chigai et al. (1999)
+      sig = 1242.0
+    case 'SiC':
+      # Nozawa et al. (2003)
+      sig = 1800.0
+    case 'CaTiO3':
+      # Kozasa et al. (1987)
+      sig = 494.0      
     case 'TiO2':
       # Sindel et al. (2022)
       sig = 589.79 - 0.0708 * T
     case 'Fe':
       # http://www.kayelaby.npl.co.uk/general_physics/2_2/2_2_5.html
       sig = 1862.0 - 0.39 * (TC - 1530.0)
+    case 'Fe2O3':
+      sig = 410.0
+    case 'FeO':
+      # Janz (1988)
+      sig = 585.0
+    case 'Al2O3':
+      # Pradhan et al. (2009)
+      sig = 1024.0 - 0.177 * T
     case 'MgSiO3':
-      # Janz 1988
+      # Janz (1988)
       sig = 197.3 + 0.098 * T
+    case 'Mg2SiO4':
+      # Kozasa et al. (1989)
+      sig = 436.0
+    case 'SiO':
+      # Gail and Sedlmayr (1986)
+      sig = 500.0
+    case 'SiO2':
+      # Janz (1988)
+      sig = 243.2 + 0.031 * T
+    case 'Cr':
+      # http://www.kayelaby.npl.co.uk/general_physics/2_2/2_2_5.html
+      sig = 1642.0 - 0.20 * (TC - 1860.0)      
+    case 'MnS':
+      sig = 2326.0
+    case 'Na2S':
+      sig = 1033.0
     case 'KCl':
-      # Janz 1988
-      sig = 160.4 - 0.07*T
+      # Janz (1988)
+      sig = 160.4 - 0.07 * T
+    case 'NaCl':
+      # Janz (1988)
+      sig = 191.16 - 0.07188 * T
+    case 'ZnS':
+      sig = 860.0
+    case 'H2O':
+      # Hale and Plummer (1974)
+      sig = 141.0 - 0.15 * TC
+    case 'NH3':
+      # Weast et al. (1988)
+      sig = 23.4
+    case 'NH4Cl':
+      sig = 56.0
+    case 'NH4SH':
+      sig = 50.0
+    case 'CH4':
+      # USCG (1984)
+      sig = 14.0
+    case 'H2S':
+      # Nehb and Vydra (2006)
+      sig = 58.1
+    case 'S2','S8':
+      # Fanelli (1950)
+      sig = 60.8
     case _:
-      print('Surface tension species not found: ', cld_sp)   
+      print('Species surface tension not found: ', cld_sp)
+      sig = 10.0
 
   sig = np.maximum(10.0, sig) 
 
