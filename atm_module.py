@@ -56,7 +56,8 @@ def hypsometric(nlev, Tl, pe, mu, grav):
 
 def vapour_pressure(vap_mw, cld_sp, T, p, rho, met):
 
-  # Calculate vapour pressure of species in dyne
+  # Function to calculate vapour pressure of a species in dyne
+
   match cld_sp:
     case 'C':
       # Gail & Sedlmayr (2013) - I think...
@@ -185,7 +186,7 @@ def vapour_pressure(vap_mw, cld_sp, T, p, rho, met):
         p_vap = np.exp(1.861e1 - 4.154e3/T + 1.041e5/T**2) * bar
     case 'O2':
       # Blakley et al. (2024) - experimental to low T and pressure (beta O2)
-      p_vap = np.exp(15.29 - 1166.2/T - 0.75587*np.log(T) + 0.14188*T - 1.8665e-3*T**2 + 7.582e-6 *T**3) * bar
+      p_vap = np.exp(15.29 - 1166.2/T - 0.75587*np.log(T) + 0.14188*T - 1.8665e-3*T**2 + 7.582e-6*T**3) * bar
     case _:
       print('Vapour pressure species not found: ', cld_sp)
       print('quitting')
@@ -348,8 +349,8 @@ def v_f_two_moment(nlay, ncld, q_0, q_1, grav, rho_d, nd_atm, rho, eta, mfp, cT)
     Kn = mfp[k]/r_c
     Kn_b = np.minimum(Kn, 100.0)
 
-    # Cunningham slip factor (Kim et al. 2005)
-    beta = 1.0 + Kn_b*(1.165 + 0.483 * np.exp(-0.997/Kn_b))
+    # Cunningham slip factor (Jung et al. 2012)
+    beta = 1.0 + Kn_b*(1.165 + 0.480 * np.exp(-1.001/Kn_b))
 
     # Stokes regime (Kn << 1) settling velocity (Ohno & Okuzumi 2017)
     v_f_St = (2.0 * beta * grav * r_c**2 * (rho_d_m - rho[k]))/(9.0 * eta[k]) \
@@ -378,8 +379,8 @@ def v_f_sat_adj(nlay, r_c, grav, rho_d, rho, eta, mfp, cT):
     Kn = mfp[k]/r_c[k]
     Kn_b = np.minimum(Kn, 100.0)
 
-    # Cunningham slip factor (Kim et al. 2005)
-    beta = 1.0 + Kn_b*(1.165 + 0.483 * np.exp(-0.997/Kn_b))
+    # Cunningham slip factor (Jung et al. 2012)
+    beta = 1.0 + Kn_b*(1.165 + 0.480 * np.exp(-1.001/Kn_b))
 
     # Stokes regime (Kn << 1) settling velocity (Ohno & Okuzumi 2017)
     v_f_St = (2.0 * beta * grav * r_c[k]**2 * (rho_d - rho[k]))/(9.0 * eta[k]) \

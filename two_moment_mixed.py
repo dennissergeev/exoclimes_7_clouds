@@ -237,10 +237,10 @@ def dqdt(t, y, ncld, p_vap, vth, D, sig_inf, Rd_v, cld_nuc, nd_atm, rho, mfp, T,
 
   # Knudsen number
   Kn = mfp/r_c
-
-  # Cunningham slip factor (Kim et al. 2005)
   Kn_b = np.minimum(Kn, 100.0)
-  beta = 1.0 + Kn_b*(1.165 + 0.483 * np.exp(-0.997/Kn_b))
+
+  # Cunningham slip factor (Jung et al. 2012)
+  beta = 1.0 + Kn_b*(1.165 + 0.480 * np.exp(-1.001/Kn_b))
 
   # Settling velocity (Stokes regime)
   vf_s = (2.0 * beta * grav * r_c**2 * (rho_d_m - rho))/(9.0 * eta) \

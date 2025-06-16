@@ -24,8 +24,8 @@ def v_f(r_c, grav, rho_d, rho, eta, mfp, cT, w):
   Kn = mfp/r_c
   Kn_b = np.minimum(Kn, 100.0)
 
-  # Cunningham slip factor (Kim et al. 2005)
-  beta = 1.0 + Kn_b*(1.165 + 0.483 * np.exp(-0.997/Kn_b))
+  # Cunningham slip factor (Jung et al. 2012)
+  beta = 1.0 + Kn_b*(1.165 + 0.480 * np.exp(-1.001/Kn_b))
 
   # Stokes regime (Kn << 1) settling velocity (Ohno & Okuzumi 2017)
   v_f_St = (2.0 * beta * grav * r_c**2 * (rho_d - rho))/(9.0 * eta) \
