@@ -3,13 +3,13 @@
 '''
 
 import numpy as np
+from numba import jit
 
-CFL = 0.95
-
-q_min = 1e-99
-
-
+@jit
 def exp_vert_diff(t_step, nlay, Kzz, rho, alte, altl, q, q0):
+
+  CFL = 0.95
+  q_min = 1e-99
 
   nlev = nlay + 1
 

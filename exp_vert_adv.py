@@ -3,12 +3,14 @@
 '''
 
 import numpy as np
+from numba import jit
 
-CFL = 0.95
-q_min = 1e-99
-
+@jit
 def exp_vert_adv(t_step, nlay, v_f, rho, alte, altl, q_in, q0):
 
+
+  CFL = 0.95
+  q_min = 1e-99
 
   nlev = nlay + 1
 
@@ -56,7 +58,7 @@ def exp_vert_adv(t_step, nlay, v_f, rho, alte, altl, q_in, q0):
       dt = t_step - t_now
 
      # Find the courant number
-    c[:] = (abs(v_f_e[1:nlay]) * dt) / dz_m[:]
+    c[:] = (np.absolute(v_f_e[1:nlay]) * dt) / dz_m[:]
 
     # Calculate flux limiter using koren method
     phi[0] = 0.0

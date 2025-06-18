@@ -12,6 +12,7 @@ adiabat_correction - applies an adiabat gradient correction at a given kappa to 
 '''
 
 import numpy as np
+from numba import jit
 
 # Some physical constants
 R = 8.31446261815324e7
@@ -40,6 +41,7 @@ c11_l = 1.877; c11_h = 0.7048
 c12_l = -0.445; c12_h = -0.0414
 c13_l = 0.8321; c13_h = 0.8321
 
+@jit
 def hypsometric(nlev, Tl, pe, mu, grav):
 
   alte = np.zeros(nlev)
@@ -54,6 +56,7 @@ def hypsometric(nlev, Tl, pe, mu, grav):
 
   return alte, Hp
 
+@jit
 def vapour_pressure(vap_mw, cld_sp, T, p, rho, met):
 
   # Function to calculate vapour pressure of a species in dyne
@@ -190,7 +193,7 @@ def vapour_pressure(vap_mw, cld_sp, T, p, rho, met):
     case _:
       print('Vapour pressure species not found: ', cld_sp)
       print('quitting')
-      quit()
+      #quit()
 
 
   # Specific gas constant of condensable vapour 
@@ -201,6 +204,7 @@ def vapour_pressure(vap_mw, cld_sp, T, p, rho, met):
 
   return p_vap, q_s
 
+@jit
 def surface_tension(cld_sp, T):
 
   # Function to calculate the surface tension (erg cm^-2) for different species
@@ -288,6 +292,7 @@ def surface_tension(cld_sp, T):
 
   return sig
 
+@jit
 def visc_mixture(T, nbg, bg_VMR, bg_mw, bg_d, bg_LJ):
 
   # Davidson (1993) dynamical viscosity mixing rule
@@ -303,7 +308,9 @@ def visc_mixture(T, nbg, bg_VMR, bg_mw, bg_d, bg_LJ):
   bot = 0.0
   for n  in range(nbg):
     bot = bot + bg_VMR[n] * np.sqrt(bg_mw[n])
-  y[:] = (bg_VMR[:] * np.sqrt(bg_mw[:]))/bot
+
+  for n in range(nbg):
+    y[n] = (bg_VMR[n] * np.sqrt(bg_mw[n]))/bot
 
   # Calculate fluidity following Davidson equation
   eta = 0.0
@@ -318,6 +325,7 @@ def visc_mixture(T, nbg, bg_VMR, bg_mw, bg_d, bg_LJ):
 
   return eta
 
+@jit
 def v_f_two_moment(nlay, ncld, q_0, q_1, grav, rho_d, nd_atm, rho, eta, mfp, cT):
 
   # Calculate settling velocity v_f [cm s-1] at each layer
@@ -368,6 +376,7 @@ def v_f_two_moment(nlay, ncld, q_0, q_1, grav, rho_d, nd_atm, rho, eta, mfp, cT)
 
   return v_f
 
+@jit
 def v_f_sat_adj(nlay, r_c, grav, rho_d, rho, eta, mfp, cT):
 
   # Calculate settling velocity v_f [cm s-1] at each layer
@@ -398,6 +407,7 @@ def v_f_sat_adj(nlay, r_c, grav, rho_d, rho, eta, mfp, cT):
 
   return v_f
 
+@jit
 def k_Ross_Freedman(Tin, Pin, met):
 
   # Calculates the IR band Rosseland mean opacity (local T) according to the
@@ -440,6 +450,7 @@ def k_Ross_Freedman(Tin, Pin, met):
 
   return k_IR
 
+@jit
 def adiabat_correction(nlay,Tl,pl,kappa):
 
   # Subroutine that corrects for adiabatic region following Parmentier & Guillot (2015)

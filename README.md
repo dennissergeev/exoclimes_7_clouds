@@ -30,6 +30,7 @@ You will need to install the following packages for the examples to work, (e.g. 
 + scipy
 + matplotlib
 + seaborn
++ numba (for @jit constructs)
 
 This should generate matplotlib plot popups, as well as png files in the directory with the results.
 
