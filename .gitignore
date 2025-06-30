@@ -172,3 +172,7 @@ cython_debug/
 
 *.png
 *.pdf
+
+# pixi environments
+.pixi
+*.egg-info

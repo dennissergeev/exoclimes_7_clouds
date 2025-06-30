@@ -1,0 +1,16 @@
+[workspace]
+authors = ["Denis Sergeev <dennis.sergeev@gmail.com>"]
+channels = ["conda-forge"]
+name = "exoclimes_7_clouds"
+platforms = ["osx-arm64"]
+version = "0.1.0"
+
+[tasks]
+
+[dependencies]
+pyyaml = ">=6.0.2,<7"
+numpy = ">=2.2.6,<3"
+scipy = ">=1.16.0,<2"
+matplotlib = ">=3.10.3,<4"
+seaborn = ">=0.13.2,<0.14"
+numba = ">=0.61.2,<0.62"
